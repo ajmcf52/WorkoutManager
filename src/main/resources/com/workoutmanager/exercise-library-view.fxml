@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
+<HBox
+    xmlns="http://javafx.com/javafx"
+    xmlns:fx="http://javafx.com/fxml"
+    fx:controller="com.workoutmanager.ExerciseLibraryController">
+
+    <VBox alignment="TOP_CENTER">
+        <TextField fx:id="searchField"
+                   promptText="Search an exercise.."/>
+
+        <ComboBox fx:id="equipmentFilter"
+                  promptText="Equipment"/>
+
+        <ComboBox fx:id="difficultyFilter"
+                  promptText="Difficulty"/>
+    </VBox>
+    <TableView
+            fx:id="exerciseTable"
+            prefWidth="500">
+
+        <columns>
+
+            <TableColumn fx:id="nameColumn"
+                         text="Exercise"/>
+
+            <TableColumn fx:id="difficultyColumn"
+                         text="Difficulty"/>
+
+            <TableColumn fx:id="equipmentColumn"
+                         text="Equipment"/>
+
+        </columns>
+
+    </TableView>
+
+    <VBox fx:id="detailsPane"
+          spacing="10"
+          prefWidth="350">
+
+        <Label fx:id="nameLabel"
+                   text="Select an exercise"/>
+
+        <Label fx:id="difficultyLabel"
+               text="Difficulty:"/>
+
+        <Label fx:id="equipmentLabel"
+               text="Equipment:"/>
+
+        <Label fx:id="muscleGroupsLabel"
+               text="Muscle Groups:"/>
+
+        <Label text="Instructions:"/>
+
+        <TextArea fx:id="instructionsArea"
+                  editable="false"
+                  wrapText="true"
+                  prefRowCount="8"/>
+
+        <Hyperlink fx:id="demoLink"
+                   text="Open Demo"/>
+
+    </VBox>
+
+</HBox>
