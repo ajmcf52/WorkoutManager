@@ -2,18 +2,24 @@ package com.workoutmanager;
 
 import enums.Difficulty;
 import enums.Equipment;
+import enums.MuscleGroup;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.Exercise;
 import model.ExerciseJsonLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
@@ -62,6 +68,9 @@ public class ExerciseLibraryController {
 
     @FXML
     private ComboBox<Difficulty> difficultyFilter;
+
+    @FXML
+    private ComboBox<MuscleGroup> muscleGroupFilter;
 
     @FXML
     private Hyperlink demoLink;
@@ -133,6 +142,34 @@ public class ExerciseLibraryController {
         });
     }
 
+    /*
+    secondary window creation that occurs when
+    a user wishes to create a new exercise.
+     */
+    @FXML
+    private void createNewExerciseWindow() {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/workoutmanager/new-exercise-view.fxml"));
+        Scene scene;
+        try {
+            scene = new Scene(loader.load());
+        } catch (IOException e) {
+            System.err.println("Secondary exercise window failed to load.");
+            throw new RuntimeException(e);
+        }
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        stage.showAndWait();
+
+        NewExerciseController controller = loader.getController();
+        Exercise newExercise = controller.getExercise();
+        if (newExercise == null) {
+            return;
+        }
+        allExercises.add(newExercise);
+    }
+
     //hides details when nothing is selected.
     private void hideExerciseDetails() {
         detailsPane.setVisible(false);
@@ -146,9 +183,10 @@ public class ExerciseLibraryController {
         String searchText = searchField.getText().toLowerCase();
         Equipment equipmentValue = equipmentFilter.getValue();
         Difficulty difficultyValue = difficultyFilter.getValue();
+        MuscleGroup muscleGroupValue = muscleGroupFilter.getValue();
 
         filteredExercises.setPredicate(exercise -> {
-            boolean searchMatch, equipmentMatch, difficultyMatch;
+            boolean searchMatch, equipmentMatch, difficultyMatch, muscleGroupMatch;
 
             //search text predicate
             if (searchText.isBlank()) {
@@ -173,7 +211,16 @@ public class ExerciseLibraryController {
             else {
                 difficultyMatch = (difficultyValue == exercise.getDifficulty());
             }
-            return searchMatch && equipmentMatch && difficultyMatch;
+
+            //muscle group predicate
+            if (muscleGroupValue == null || muscleGroupValue.toString().equals("All")) {
+                muscleGroupMatch = true;
+            }
+            else {
+                muscleGroupMatch = exercise.getMuscleGroups().contains(muscleGroupValue);
+            }
+
+            return searchMatch && equipmentMatch && difficultyMatch && muscleGroupMatch;
         });
 
         exerciseTable.setItems(filteredExercises);
@@ -207,7 +254,6 @@ public class ExerciseLibraryController {
             file = new File(resource.toURI());
         } catch (URISyntaxException e) {
             System.err.println("Exercise file creation failed.");
-            e.printStackTrace();
             return;
         }
 
@@ -262,6 +308,12 @@ public class ExerciseLibraryController {
         difficultyFilter.getItems().addAll(enums.Difficulty.values());
         difficultyFilter.setPrefWidth(Region.USE_COMPUTED_SIZE);
         difficultyFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
+            updatePredicate();
+        });
+
+        muscleGroupFilter.getItems().addAll(MuscleGroup.values());
+        muscleGroupFilter.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        muscleGroupFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
             updatePredicate();
         });
 

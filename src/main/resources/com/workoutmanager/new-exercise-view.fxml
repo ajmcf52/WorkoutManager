@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.workoutmanager.NewExerciseController"
+            prefHeight="400.0" prefWidth="600.0"
+            alignment="CENTER">
+
+    <Label text="Create New Exercise"/>
+
+    <HBox>
+        <Label text="Exercise name: " />
+        <TextField fx:id="exerciseName"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Difficulty: " />
+        <ComboBox fx:id="difficultySelection"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Equipment: "/>
+        <ComboBox fx:id="equipmentSelection"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Muscle groups: "/>
+        <ListView fx:id="muscleGroupSelection"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Demo URL: "/>
+        <TextField fx:id="exerciseDemoUrl"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Instructions: "/>
+        <TextArea fx:id="exerciseInstructions"/>
+    </HBox>
+
+    <Label fx:id="errorMessageIndicator"
+               visible="false"/>
+
+    <HBox>
+        <Button text="Save"
+                onAction="#saveExerciseCreation"
+                fx:id="saveButton"/>
+        <Button text="Cancel"
+                onAction="#cancelExerciseCreation"
+                fx:id="cancelButton"/>
+    </HBox>
+
+</VBox>

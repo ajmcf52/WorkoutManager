@@ -5,16 +5,17 @@ outlines the major muscle groups of the body.
  */
 
 public enum MuscleGroup {
-    CHEST("CHEST"),
-    TRICEPS("TRICEPS"),
-    BICEPS("BICEPS"),
-    CALVES("CALVES"),
-    QUADS("QUADS"),
-    GLUTES("GLUTES"),
-    HAMSTRINGS("HAMSTRINGS"),
-    SHOULDERS("SHOULDERS"),
-    ADDUCTORS("ADDUCTORS"),
-    HIP_FLEXORS("HIP_FLEXORS");
+    NULL("All"),
+    CHEST("Chest"),
+    TRICEPS("Triceps"),
+    BICEPS("Biceps"),
+    CALVES("Calves"),
+    QUADS("Quads"),
+    GLUTES("Glutes"),
+    HAMSTRINGS("Hamstrings"),
+    SHOULDERS("Shoulders"),
+    ADDUCTORS("Adductors"),
+    HIP_FLEXORS("Hip Flexors");
 
     private final String muscleGroupName;
 

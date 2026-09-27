@@ -10,6 +10,7 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
 <HBox
     xmlns="http://javafx.com/javafx"
     xmlns:fx="http://javafx.com/fxml"
@@ -24,6 +25,15 @@
 
         <ComboBox fx:id="difficultyFilter"
                   promptText="Difficulty"/>
+
+        <ComboBox fx:id="muscleGroupFilter"
+                  promptText="Muscle Group"/>
+
+        <Button fx:id="newExerciseButton"
+                text="Add an exercise.."
+                onAction="#createNewExerciseWindow"
+                textAlignment="CENTER"/>
+
     </VBox>
     <TableView
             fx:id="exerciseTable"
