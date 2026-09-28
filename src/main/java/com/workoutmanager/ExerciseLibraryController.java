@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exercise;
-import model.ExerciseJsonLoader;
+import model.ExerciseRepository;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,9 +29,15 @@ public class ExerciseLibraryController {
     @FXML
     private TableView<Exercise> exerciseTable;
 
+    private ExerciseRepository repository;
+
     private ObservableList<Exercise> allExercises;
 
     private FilteredList<Exercise> filteredExercises;
+
+    private static final String JSON_FILEPATH = "/com/workoutmanager/exercises.json";
+
+    private File JsonExerciseFile;
 
     @FXML
     private TableColumn<Exercise, String> nameColumn;
@@ -95,8 +101,13 @@ public class ExerciseLibraryController {
         try {
             java.awt.Desktop.getDesktop()
                     .browse(java.net.URI.create(url));
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("IO Error during demo link opening.");
+            throw new RuntimeException(e);
+        }
+        catch (Exception e) {
+            System.err.println("Exception opening demo link.");
+            throw e;
         }
     }
 
@@ -160,6 +171,7 @@ public class ExerciseLibraryController {
         stage.setScene(scene);
         stage.initModality(Modality.APPLICATION_MODAL);
 
+        //wait for secondary window to do its work
         stage.showAndWait();
 
         NewExerciseController controller = loader.getController();
@@ -168,6 +180,9 @@ public class ExerciseLibraryController {
             return;
         }
         allExercises.add(newExercise);
+
+        //save the new exercise into JSON
+        repository.saveAll(allExercises, JSON_FILEPATH);
     }
 
     //hides details when nothing is selected.
@@ -240,26 +255,14 @@ public class ExerciseLibraryController {
                 new PropertyValueFactory<>("equipment")
         );
 
-
-        // working out the path to our JSON file
-
-        URL resource = getClass().getResource("/com/workoutmanager/exercises.json");
-        if (resource == null) {
-            System.out.println("Could not find exercises.json");
-            return;
-        }
-
-        File file = null;
-        try {
-            file = new File(resource.toURI());
-        } catch (URISyntaxException e) {
-            System.err.println("Exercise file creation failed.");
-            return;
-        }
-
         // loading exercises, rendering observable
-        ExerciseJsonLoader loader = new ExerciseJsonLoader();
-        List<Exercise> exercises = loader.loadExercises(file.getPath());
+        repository = new ExerciseRepository();
+        List<Exercise> exercises = repository.loadAll(JSON_FILEPATH);
+
+        if (exercises == null) {
+            System.err.println("Controller in initialize(): exercises returned null.");
+            return;
+        }
 
         allExercises = FXCollections.observableArrayList(exercises);
         filteredExercises = new FilteredList<Exercise>(allExercises);
