@@ -104,8 +104,7 @@ public class ExerciseLibraryController {
         } catch (IOException e) {
             System.err.println("IO Error during demo link opening.");
             throw new RuntimeException(e);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.err.println("Exception opening demo link.");
             throw e;
         }
@@ -151,6 +150,29 @@ public class ExerciseLibraryController {
                 openLink(url);
             }
         });
+    }
+
+    /*
+    opens a secondary modal for creating a program.
+     */
+    @FXML
+    private void createNewProgramWindow() {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/workoutmanager/program-builder-view.fxml"));
+        Scene scene;
+        try {
+            scene = new Scene(loader.load());
+        } catch (IOException e) {
+            System.err.println("Program builder window failed to load.");
+            throw new RuntimeException(e);
+        }
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        ProgramBuilderController controller = loader.getController();
+        controller.setExerciseList(allExercises);
+
+        stage.showAndWait();
     }
 
     /*

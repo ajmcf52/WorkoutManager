@@ -34,6 +34,9 @@
                 onAction="#createNewExerciseWindow"
                 textAlignment="CENTER"/>
 
+        <Button text="Create Program"
+                onAction="#createNewProgramWindow"/>
+
     </VBox>
     <TableView
             fx:id="exerciseTable"

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.workoutmanager.ProgramBuilderController"
+            prefHeight="600.0" prefWidth="450.0">
+
+    <HBox>
+        <Label text="Program name: "/>
+        <TextField fx:id="programNameField"/>
+    </HBox>
+
+    <TableView fx:id="availableExercisesView"
+               prefWidth="250">
+        <columns>
+            <TableColumn fx:id="availableExercisesColumn"
+                         text="Available Exercises"
+                         prefWidth="250"/>
+        </columns>
+    </TableView>
+
+    <Button fx:id="addExerciseButton"
+            text="Add to Program ->"
+            onAction="#addExerciseToProgram"/>
+
+    <TableView fx:id="programExercisesView"
+               prefWidth="250">
+        <columns>
+            <TableColumn fx:id="programExercisesColumn"
+                         text="Program Exercises"
+                         prefWidth="250"/>
+        </columns>
+    </TableView>
+
+    <HBox>
+        <Button fx:id="removeExerciseButton"
+                text="Remove"
+                onAction="#removeExercise"/>
+        <Button fx:id="saveProgramButton"
+                text="Save Program"
+                onAction="#saveProgram"/>
+        <Button fx:id="cancelButton"
+                text="Cancel"
+                onAction="#cancelProgramCreation"/>
+    </HBox>
+
+</VBox>
