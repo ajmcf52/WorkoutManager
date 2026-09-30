@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /*
 represents an exercise program
@@ -9,14 +10,14 @@ that users may build and follow at the gym.
 public class WorkoutProgram {
 
     private String programName;
-    private ArrayList<Exercise> exercises;
+    private List<Exercise> exercises;
 
     /*
     empty constructor; intended for use with Jackson
      */
     public WorkoutProgram() {}
 
-    public WorkoutProgram(String name, ArrayList<Exercise> exerciseList) {
+    public WorkoutProgram(String name, List<Exercise> exerciseList) {
         this.exercises = exerciseList;
         this.programName = name;
     }
@@ -25,7 +26,7 @@ public class WorkoutProgram {
         return this.programName;
     }
 
-    public ArrayList<Exercise> getExercises() {
+    public List<Exercise> getExercises() {
         return exercises;
     }
 
@@ -33,8 +34,13 @@ public class WorkoutProgram {
         this.programName = name;
     }
 
-    public void setExercises(ArrayList<Exercise> exerciseList) {
+    public void setExercises(List<Exercise> exerciseList) {
         this.exercises = exerciseList;
+    }
+
+    @Override
+    public String toString() {
+        return getProgramName() + ": " + getExercises().size() + " exercises.";
     }
 
 }

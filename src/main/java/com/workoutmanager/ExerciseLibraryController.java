@@ -17,6 +17,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exercise;
 import model.ExerciseRepository;
+import model.WorkoutProgram;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,6 +174,9 @@ public class ExerciseLibraryController {
         controller.setExerciseList(allExercises);
 
         stage.showAndWait();
+
+        WorkoutProgram program = controller.getWorkoutProgram();
+        System.out.println(program.toString());
     }
 
     /*

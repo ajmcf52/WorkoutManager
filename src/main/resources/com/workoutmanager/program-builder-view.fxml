@@ -16,37 +16,27 @@
         <TextField fx:id="programNameField"/>
     </HBox>
 
-    <TableView fx:id="availableExercisesView"
-               prefWidth="250">
-        <columns>
-            <TableColumn fx:id="availableExercisesColumn"
-                         text="Available Exercises"
-                         prefWidth="250"/>
-        </columns>
-    </TableView>
+    <TextField fx:id="searchField"
+               promptText="Search available exercises"/>
 
-    <Button fx:id="addExerciseButton"
-            text="Add to Program ->"
+    <ListView fx:id="availableExercisesView"
+               prefWidth="250"/>
+
+    <Button text="Add to Program ->"
             onAction="#addExerciseToProgram"/>
 
-    <TableView fx:id="programExercisesView"
-               prefWidth="250">
-        <columns>
-            <TableColumn fx:id="programExercisesColumn"
-                         text="Program Exercises"
-                         prefWidth="250"/>
-        </columns>
-    </TableView>
+    <ListView fx:id="programExercisesView"
+               prefWidth="250"/>
+
+    <Label fx:id="errorMessageIndicator"
+           visible="false"/>
 
     <HBox>
-        <Button fx:id="removeExerciseButton"
-                text="Remove"
+        <Button text="Remove"
                 onAction="#removeExercise"/>
-        <Button fx:id="saveProgramButton"
-                text="Save Program"
+        <Button text="Save Program"
                 onAction="#saveProgram"/>
-        <Button fx:id="cancelButton"
-                text="Cancel"
+        <Button text="Cancel"
                 onAction="#cancelProgramCreation"/>
     </HBox>
 
