@@ -15,8 +15,12 @@
         <Label text="Saved Programs" />
         <ListView fx:id="programsListView"
                   prefWidth="350"/>
-        <Button text="Create Program"
-                onAction="#createNewProgramWindow"/>
+        <HBox>
+            <Button text="Create Program"
+                    onAction="#createNewProgramWindow"/>
+            <Button text="Delete Program"
+                    onAction="#deleteProgram" />
+        </HBox>
     </VBox>
 
     <VBox fx:id="detailsPane"

@@ -1,0 +1,20 @@
+.filter-panel {
+    -fx-padding: 10;
+    -fx-spacing: 8;
+}
+
+.filter-control {
+    -fx-pref-width: 140;
+}
+
+.details-panel {
+    -fx-padding: 10;
+}
+
+.instructions-panel {
+    -fx-padding: 10;
+}
+
+.combo-box .cell {
+    -fx-alignment: CENTER;
+}

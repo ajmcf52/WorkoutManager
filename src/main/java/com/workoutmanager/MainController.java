@@ -69,5 +69,11 @@ public class MainController {
             allPrograms.add(program);
             programRepository.saveAll(allPrograms);
         });
+
+        // program deletion CB
+        programLibraryController.setOnProgramDeleted(program -> {
+            allPrograms.remove(program);
+            programRepository.saveAll(allPrograms);
+        });
     }
 }

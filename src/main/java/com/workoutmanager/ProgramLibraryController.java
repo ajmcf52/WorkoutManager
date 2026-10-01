@@ -5,9 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -15,6 +13,7 @@ import model.Exercise;
 import model.WorkoutProgram;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /*
@@ -40,9 +39,15 @@ public class ProgramLibraryController {
 
     private Consumer<WorkoutProgram> onProgramCreated;
 
-    // linking the callback to MainController
+    private Consumer<WorkoutProgram> onProgramDeleted;
+
+    // linking callbacks to MainController
     public void setOnProgramCreated(Consumer<WorkoutProgram> callback) {
         this.onProgramCreated = callback;
+    }
+
+    public void setOnProgramDeleted(Consumer<WorkoutProgram> callback) {
+        this.onProgramDeleted = callback;
     }
 
     /*
@@ -105,6 +110,30 @@ public class ProgramLibraryController {
         WorkoutProgram program = controller.getWorkoutProgram();
 
         onProgramCreated.accept(program);
+    }
+
+    // delete button action listener
+    public void deleteProgram() {
+
+        //determine which program to delete
+        WorkoutProgram selected = programsListView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            return;
+        }
+
+        // confirm deletion to avoid user misclicks
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Program");
+        alert.setHeaderText("Delete \"" + selected.getProgramName() + "\"?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            //trigger the callback
+            onProgramDeleted.accept(selected);
+        }
+
+
     }
 
     public void initialize() {

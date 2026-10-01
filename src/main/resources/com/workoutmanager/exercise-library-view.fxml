@@ -14,22 +14,31 @@
 <HBox
     xmlns="http://javafx.com/javafx"
     xmlns:fx="http://javafx.com/fxml"
+    stylesheets="@styles.css"
+    prefWidth="1000"
+    prefHeight="500"
     fx:controller="com.workoutmanager.ExerciseLibraryController">
 
-    <VBox alignment="TOP_CENTER">
+    <VBox   styleClass="filter-panel"
+            alignment="TOP_CENTER">
         <TextField fx:id="searchField"
+                   styleClass="filter-control"
                    promptText="Search an exercise.."/>
 
         <ComboBox fx:id="equipmentFilter"
+                  styleClass="filter-control"
                   promptText="Equipment"/>
 
         <ComboBox fx:id="difficultyFilter"
+                  styleClass="filter-control"
                   promptText="Difficulty"/>
 
         <ComboBox fx:id="muscleGroupFilter"
+                  styleClass="filter-control"
                   promptText="Muscle Group"/>
 
         <Button text="Add an exercise.."
+                styleClass="filter-control"
                 onAction="#createNewExerciseWindow"
                 textAlignment="CENTER"/>
 
@@ -54,6 +63,7 @@
     </TableView>
 
     <VBox fx:id="detailsPane"
+          styleClass="details-panel"
           spacing="10"
           prefWidth="350">
 
@@ -70,15 +80,15 @@
                text="Muscle Groups:"/>
 
         <Label text="Instructions:"/>
+        <VBox styleClass="instructions-panel">
+            <TextArea fx:id="instructionsArea"
+                      editable="false"
+                      wrapText="true"
+                      prefRowCount="8"/>
 
-        <TextArea fx:id="instructionsArea"
-                  editable="false"
-                  wrapText="true"
-                  prefRowCount="8"/>
-
-        <Hyperlink fx:id="demoLink"
-                   text="Open Demo"/>
-
+            <Hyperlink fx:id="demoLink"
+                       text="Open Demo"/>
+        </VBox>
     </VBox>
 
 </HBox>
