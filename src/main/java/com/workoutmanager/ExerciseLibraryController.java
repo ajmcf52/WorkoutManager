@@ -17,28 +17,21 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exercise;
 import model.ExerciseRepository;
+import model.ProgramRepository;
 import model.WorkoutProgram;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class ExerciseLibraryController {
     @FXML
     private TableView<Exercise> exerciseTable;
 
-    private ExerciseRepository repository;
-
-    private ObservableList<Exercise> allExercises;
-
     private FilteredList<Exercise> filteredExercises;
 
-    private static final String JSON_FILEPATH = "/com/workoutmanager/exercises.json";
-
-    private File JsonExerciseFile;
+    private ObservableList<WorkoutProgram> allPrograms;
 
     @FXML
     private TableColumn<Exercise, String> nameColumn;
@@ -82,8 +75,27 @@ public class ExerciseLibraryController {
     @FXML
     private Hyperlink demoLink;
 
+    private Consumer<Exercise> onExerciseCreated;
+
+    /*
+    public setter. allows Main controller to inject all exercise data.
+     */
+    public void setExerciseList(ObservableList<Exercise> exercises) {
+        filteredExercises = new FilteredList<>(exercises);
+        exerciseTable.setItems(filteredExercises);
+    }
+
+    /*
+    callback function--allows newly created exercises to be passed
+    up the chain the MainController while avoiding tight coupling.
+     */
+    public void setOnExerciseCreated(Consumer<Exercise> callback) {
+        this.onExerciseCreated = callback;
+    }
+
     /*
     enum format helper function.
+    used for clean display of exercise table data.
      */
     private String formatEnum(Enum<?> value) {
         String text = value.name()
@@ -154,32 +166,6 @@ public class ExerciseLibraryController {
     }
 
     /*
-    opens a secondary modal for creating a program.
-     */
-    @FXML
-    private void createNewProgramWindow() {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/workoutmanager/program-builder-view.fxml"));
-        Scene scene;
-        try {
-            scene = new Scene(loader.load());
-        } catch (IOException e) {
-            System.err.println("Program builder window failed to load.");
-            throw new RuntimeException(e);
-        }
-        Stage stage = new Stage();
-        stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL);
-
-        ProgramBuilderController controller = loader.getController();
-        controller.setExerciseList(allExercises);
-
-        stage.showAndWait();
-
-        WorkoutProgram program = controller.getWorkoutProgram();
-        System.out.println(program.toString());
-    }
-
-    /*
     secondary window creation that occurs when
     a user wishes to create a new exercise.
      */
@@ -205,10 +191,9 @@ public class ExerciseLibraryController {
         if (newExercise == null) {
             return;
         }
-        allExercises.add(newExercise);
 
-        //save the new exercise into JSON
-        repository.saveAll(allExercises, JSON_FILEPATH);
+        //make the callback to MainController
+        onExerciseCreated.accept(newExercise);
     }
 
     //hides details when nothing is selected.
@@ -269,6 +254,8 @@ public class ExerciseLibraryController {
 
     @FXML
     public void initialize() {
+
+        // table cell formatting
         nameColumn.setCellValueFactory(
                 new PropertyValueFactory<>("name")
         );
@@ -281,22 +268,9 @@ public class ExerciseLibraryController {
                 new PropertyValueFactory<>("equipment")
         );
 
-        // loading exercises, rendering observable
-        repository = new ExerciseRepository();
-        List<Exercise> exercises = repository.loadAll(JSON_FILEPATH);
-
-        if (exercises == null) {
-            System.err.println("Controller in initialize(): exercises returned null.");
-            return;
-        }
-
-        allExercises = FXCollections.observableArrayList(exercises);
-        filteredExercises = new FilteredList<Exercise>(allExercises);
-
         //nothing has been selected yet when app is booted.
         hideExerciseDetails();
 
-        exerciseTable.setItems(filteredExercises);
         exerciseTable.setMinSize(450,350);
         exerciseTable.setColumnResizePolicy(
                 TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);

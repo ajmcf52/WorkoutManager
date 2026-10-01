@@ -29,13 +29,9 @@
         <ComboBox fx:id="muscleGroupFilter"
                   promptText="Muscle Group"/>
 
-        <Button fx:id="newExerciseButton"
-                text="Add an exercise.."
+        <Button text="Add an exercise.."
                 onAction="#createNewExerciseWindow"
                 textAlignment="CENTER"/>
-
-        <Button text="Create Program"
-                onAction="#createNewProgramWindow"/>
 
     </VBox>
     <TableView

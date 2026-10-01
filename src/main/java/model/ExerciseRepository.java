@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /*
@@ -19,20 +21,16 @@ public class ExerciseRepository {
     /*
     loads the repository of exercises from the JSON file.
      */
-    public List<Exercise> loadAll(String exerciseFilepath) {
+    public List<Exercise> loadAll() {
 
-        URL resource = getClass().getResource(exerciseFilepath);
-        if (resource == null) {
-            System.err.println("Could not find exercises.json");
-            return null;
-        }
+        Path resource = Paths.get("appdata", "exercises.json");
 
         File file = null;
         try {
-            file = new File(resource.toURI());
-        } catch (URISyntaxException e) {
+            file = new File(resource.toUri());
+        } catch (RuntimeException e) {
             System.err.println("Exercise file creation failed.");
-            return null;
+            throw e;
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -53,21 +51,17 @@ public class ExerciseRepository {
     to append a newly created exercise, this is the
     cleanest way to avoid clumsy and brittle code.
      */
-    public void saveAll(List<Exercise> exerciseList, String exerciseFilepath) {
+    public void saveAll(List<Exercise> exerciseList) {
         ObjectMapper mapper = new ObjectMapper();
 
-        URL resource = getClass().getResource(exerciseFilepath);
-        if (resource == null) {
-            System.err.println("ExerciseRepository in saveAll(): could not find exercises.json");
-            return;
-        }
+        Path resource = Paths.get("appdata", "exercises.json");
 
         File file;
         try {
-            file = new File(resource.toURI());
-        } catch (URISyntaxException e) {
+            file = new File(resource.toUri());
+        } catch (RuntimeException e) {
             System.err.println("ExerciseRepository in saveAll(): failed to create exercise file.");
-            throw new RuntimeException(e);
+            throw e;
         }
 
         try {

@@ -11,7 +11,7 @@ import java.net.URISyntaxException;
 public class WorkoutManagerApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException, URISyntaxException {
-        FXMLLoader fxmlLoader = new FXMLLoader(WorkoutManagerApplication.class.getResource("exercise-library-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(WorkoutManagerApplication.class.getResource("main-program-view.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("Workout Manager");

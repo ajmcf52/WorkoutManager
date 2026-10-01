@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.workoutmanager.ProgramLibraryController"
+            prefHeight="500.0" prefWidth="700.0">
+
+    <VBox alignment="TOP_CENTER">
+        <Label text="Saved Programs" />
+        <ListView fx:id="programsListView"
+                  prefWidth="350"/>
+        <Button text="Create Program"
+                onAction="#createNewProgramWindow"/>
+    </VBox>
+
+    <VBox fx:id="detailsPane"
+          visible="false"
+          spacing="10"
+          prefWidth="350">
+        <Label text="Selected Program: "/>
+        <Label fx:id="selectedProgramLabel" />
+        <ListView fx:id="programDetailsView"/>
+    </VBox>
+
+</HBox>

@@ -13,6 +13,7 @@ import model.WorkoutProgram;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class ProgramBuilderController {
 
@@ -38,6 +39,16 @@ public class ProgramBuilderController {
     private ObservableList<Exercise> programExercises;
 
     private WorkoutProgram workoutProgram;
+
+    Predicate<String> programNameAvailable;
+
+    /*
+    callback for ProgramLibraryController to validate
+    program name availability.
+     */
+    public void setProgramNameAvailable(Predicate<String> callback) {
+        this.programNameAvailable = callback;
+    }
 
     public WorkoutProgram getWorkoutProgram() {
         return workoutProgram;
@@ -68,10 +79,10 @@ public class ProgramBuilderController {
          */
         availableExercisesView.setCellFactory(listView -> new ListCell<>() {
             @Override
-            protected void updateItem(Exercise exercise, boolean empty) {
-                super.updateItem(exercise, empty);
+            protected void updateItem(Exercise exercise, boolean isEmpty) {
+                super.updateItem(exercise, isEmpty);
 
-                if (empty || exercise == null) {
+                if (isEmpty || exercise == null) {
                     setText(null);
                 }
                 else {
@@ -161,6 +172,12 @@ public class ProgramBuilderController {
         List<Exercise> programExerciseList = programExercisesView.getItems();
         if (programExerciseList.isEmpty()) {
             triggerErrorMessage("Program empty. Please select one or more exercises to add.");
+            return;
+        }
+
+        // check program name availability with ProgramLibrary callback
+        if (!programNameAvailable.test(programName)) {
+            triggerErrorMessage("Program name already exists!");
             return;
         }
 
