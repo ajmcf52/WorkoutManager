@@ -30,6 +30,11 @@
     </HBox>
 
     <HBox>
+        <Label text="Prescription type: "/>
+        <ComboBox fx:id="prescriptionTypeSelection"/>
+    </HBox>
+
+    <HBox>
         <Label text="Muscle groups: "/>
         <ListView fx:id="muscleGroupSelection"/>
     </HBox>

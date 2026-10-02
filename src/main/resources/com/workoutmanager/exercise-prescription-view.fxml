@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.workoutmanager.ProgramExerciseController"
+            prefHeight="400.0" prefWidth="600.0">
+
+    <Label fx:id="exerciseLabel"/>
+
+    <HBox fx:id="repRangeContainer"
+          visible="false">
+        <Label text="Rep Range: "/>
+        <TextField fx:id="minRepsField"
+                   prefWidth="25"/>
+        <Label text=" - "/>
+        <TextField fx:id="maxRepsField"
+                   prefWidth="25"/>
+    </HBox>
+
+    <HBox fx:id="durationContainer"
+          visible="false">
+        <Label text="Duration (s): "/>
+        <TextField fx:id="durationField"
+                   prefWidth="30"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Set Range: "/>
+        <TextField fx:id="minSetsField"
+                   prefWidth="25"/>
+        <Label text=" - "/>
+        <TextField fx:id="maxSetsField"
+                   prefWidth="25"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Intensity: "/>
+        <ComboBox fx:id="intensitySelections"/>
+    </HBox>
+
+    <VBox>
+        <Label text="Program Exercise Notes: "/>
+        <TextField fx:id="exerciseNotesField"
+                   prefHeight="75"
+                   prefWidth="350"/>
+    </VBox>
+
+    <Label fx:id="errorMessageDisplay"/>
+    <HBox>
+        <Button text="Save"
+                onAction="#savePrescribedExercise"/>
+        <Button text="Cancel"
+                onAction="#cancelPrescribedExercise"/>
+    </HBox>
+</VBox>

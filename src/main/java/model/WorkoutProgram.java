@@ -10,15 +10,15 @@ that users may build and follow at the gym.
 public class WorkoutProgram {
 
     private String programName;
-    private List<Exercise> exercises;
+    private List<WorkoutSection> workoutSections;
 
     /*
     empty constructor; intended for use with Jackson
      */
     public WorkoutProgram() {}
 
-    public WorkoutProgram(String name, List<Exercise> exerciseList) {
-        this.exercises = exerciseList;
+    public WorkoutProgram(String name, List<WorkoutSection> sections) {
+        this.workoutSections = sections;
         this.programName = name;
     }
 
@@ -26,21 +26,21 @@ public class WorkoutProgram {
         return this.programName;
     }
 
-    public List<Exercise> getExercises() {
-        return exercises;
+    public List<WorkoutSection> getWorkoutSections() {
+        return this.workoutSections;
     }
 
     public void setProgramName(String name) {
         this.programName = name;
     }
 
-    public void setExercises(List<Exercise> exerciseList) {
-        this.exercises = exerciseList;
+    public void setWorkoutSections(List<WorkoutSection> sections) {
+        this.workoutSections = sections;
     }
 
     @Override
     public String toString() {
-        return getProgramName() + ": " + getExercises().size() + " exercises.";
+        return getProgramName() + ": " + getWorkoutSections().size() + " sections.";
     }
 
 }

@@ -3,6 +3,7 @@ package model;
 import enums.Difficulty;
 import enums.Equipment;
 import enums.MuscleGroup;
+import enums.PrescriptionType;
 
 import java.util.EnumSet;
 
@@ -17,7 +18,7 @@ public class Exercise {
     private EnumSet<MuscleGroup> muscleGroups;
     private Difficulty difficulty;
     private Equipment equipment;
-
+    private PrescriptionType modality;
     /*
     Jackson-friendly constructor.
     In place so JSON parser can properly make Exercise objects.
@@ -30,13 +31,15 @@ public class Exercise {
                     String instructions,
                     EnumSet<MuscleGroup> muscleGroups,
                     Difficulty difficulty,
-                    Equipment equipment){
+                    Equipment equipment,
+                    PrescriptionType modality){
         this.name = name;
         this.demoLink = demoLink;
         this.instructions = instructions;
         this.muscleGroups = muscleGroups;
         this.difficulty = difficulty;
         this.equipment = equipment;
+        this.modality = modality;
     }
 
     /*
@@ -61,6 +64,9 @@ public class Exercise {
     public Difficulty getDifficulty() { return this.difficulty; }
     public Equipment getEquipment() { return this.equipment; }
 
+    public PrescriptionType getPrescriptionType() {
+        return modality;
+    }
     // setters
 
     public void setName(String name) { this.name = name; }
@@ -69,4 +75,8 @@ public class Exercise {
     public void setMuscleGroups(EnumSet<MuscleGroup> muscleGroups) { this.muscleGroups = muscleGroups; }
     public void setDifficulty(Difficulty difficulty) { this.difficulty = difficulty; }
     public void setEquipment(Equipment equipment) { this.equipment = equipment; }
+
+    public void setPrescriptionType(PrescriptionType modality) {
+        this.modality = modality;
+    }
 }

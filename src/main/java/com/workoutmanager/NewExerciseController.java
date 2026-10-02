@@ -3,6 +3,7 @@ package com.workoutmanager;
 import enums.Difficulty;
 import enums.Equipment;
 import enums.MuscleGroup;
+import enums.PrescriptionType;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -32,6 +33,9 @@ public class NewExerciseController {
 
     @FXML
     private ComboBox<Equipment> equipmentSelection;
+
+    @FXML
+    private ComboBox<PrescriptionType> prescriptionTypeSelection;
 
     @FXML
     private ListView<MuscleGroup> muscleGroupSelection;
@@ -64,11 +68,17 @@ public class NewExerciseController {
         exerciseDifficulties.removeFirst();
         difficultySelection.getItems().addAll(exerciseDifficulties);
 
-        ArrayList<Equipment> exerciseEquipments = new ArrayList<Equipment>(Arrays.stream(Equipment.values()).toList());
+        ArrayList<Equipment> exerciseEquipments = new ArrayList<Equipment>
+                (Arrays.stream(Equipment.values()).toList());
         exerciseEquipments.removeFirst();
         equipmentSelection.getItems().addAll(exerciseEquipments);
 
-        ArrayList<MuscleGroup> muscleGroups = new ArrayList<MuscleGroup>(Arrays.stream(MuscleGroup.values()).toList());
+        ArrayList<PrescriptionType> prescriptionTypes = new ArrayList<>
+                (Arrays.stream(PrescriptionType.values()).toList());
+        prescriptionTypeSelection.getItems().addAll(prescriptionTypes);
+
+        ArrayList<MuscleGroup> muscleGroups = new ArrayList<MuscleGroup>
+                (Arrays.stream(MuscleGroup.values()).toList());
         muscleGroups.removeFirst();
         muscleGroupSelection.getItems().addAll(muscleGroups);
 
@@ -87,6 +97,9 @@ public class NewExerciseController {
             clearErrorMessage();
         });
         equipmentSelection.valueProperty().addListener((observable, oldValue, newValue) -> {
+            clearErrorMessage();
+        });
+        prescriptionTypeSelection.valueProperty().addListener(observable -> {
             clearErrorMessage();
         });
         muscleGroupSelection.getSelectionModel().getSelectedItems().addListener((ListChangeListener<MuscleGroup>) change -> {
@@ -113,6 +126,7 @@ public class NewExerciseController {
         -difficulty
         -equipment
         -muscle groups
+        prescription type
         -demo link URL
         -instructions
          */
@@ -128,6 +142,12 @@ public class NewExerciseController {
         Difficulty difficulty = difficultySelection.getValue();
         if (difficulty == null) {
             triggerErrorMessage("Please select an exercise difficulty level.");
+            return;
+        }
+
+        PrescriptionType prescriptionType = prescriptionTypeSelection.getValue();
+        if (prescriptionType == null) {
+            triggerErrorMessage("Please select a prescription type.");
             return;
         }
 
@@ -160,7 +180,8 @@ public class NewExerciseController {
             return;
         }
 
-        savedExercise = new Exercise(name,demoLink,instructions,muscleGroups,difficulty,equipment);
+        savedExercise = new Exercise(name,demoLink,instructions,
+                muscleGroups,difficulty,equipment,prescriptionType);
 
         closeWindow();
     }
