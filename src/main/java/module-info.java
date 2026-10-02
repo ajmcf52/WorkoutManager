@@ -4,6 +4,7 @@ module com.example.workoutmanager {
 
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
+    requires com.dlsc.formsfx;
 
     opens com.workoutmanager to javafx.fxml;
     opens model to com.fasterxml.jackson.databind;

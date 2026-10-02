@@ -1,9 +1,7 @@
 package com.workoutmanager;
 
-import enums.Difficulty;
-import enums.Equipment;
-import enums.MuscleGroup;
-import enums.PrescriptionType;
+import com.dlsc.formsfx.model.structure.Section;
+import enums.*;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -36,6 +34,12 @@ public class NewExerciseController {
 
     @FXML
     private ComboBox<PrescriptionType> prescriptionTypeSelection;
+
+    @FXML
+    private ComboBox<MovementType> movementTypeSelection;
+
+    @FXML
+    private ListView<SectionType> suitableSectionSelection;
 
     @FXML
     private ListView<MuscleGroup> muscleGroupSelection;
@@ -76,6 +80,13 @@ public class NewExerciseController {
         ArrayList<PrescriptionType> prescriptionTypes = new ArrayList<>
                 (Arrays.stream(PrescriptionType.values()).toList());
         prescriptionTypeSelection.getItems().addAll(prescriptionTypes);
+
+        //TODO refactor above statements to more simply get all enum values.
+
+        movementTypeSelection.getItems().addAll(MovementType.values());
+
+        suitableSectionSelection.getItems().addAll(SectionType.values());
+        suitableSectionSelection.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         ArrayList<MuscleGroup> muscleGroups = new ArrayList<MuscleGroup>
                 (Arrays.stream(MuscleGroup.values()).toList());
@@ -151,12 +162,28 @@ public class NewExerciseController {
             return;
         }
 
+        MovementType movementType = movementTypeSelection.getValue();
+        if (movementType == null) {
+            triggerErrorMessage("Please select a movement type.");
+            return;
+        }
+
+        ObservableList<SectionType> selectedSectionTypes = suitableSectionSelection.selectionModelProperty()
+                .getValue().getSelectedItems();
+
+        if (selectedSectionTypes.isEmpty()) {
+            triggerErrorMessage("Please select one or more suitable workout sections.");
+            return;
+        }
+        EnumSet<SectionType> sectionTypes = EnumSet.copyOf(selectedSectionTypes);
+
         Equipment equipment = equipmentSelection.getValue();
         if (equipment == null) {
             triggerErrorMessage("Please select exercise equipment.");
             return;
         }
-        ObservableList<MuscleGroup> selectedMuscleGroups = muscleGroupSelection.selectionModelProperty().getValue().getSelectedItems();
+        ObservableList<MuscleGroup> selectedMuscleGroups = muscleGroupSelection.
+                selectionModelProperty().getValue().getSelectedItems();
 
         if (selectedMuscleGroups.isEmpty()) {
             triggerErrorMessage("Please set one or more muscle groups.");
@@ -181,7 +208,8 @@ public class NewExerciseController {
         }
 
         savedExercise = new Exercise(name,demoLink,instructions,
-                muscleGroups,difficulty,equipment,prescriptionType);
+                muscleGroups,difficulty,equipment,prescriptionType,
+                movementType, sectionTypes);
 
         closeWindow();
     }

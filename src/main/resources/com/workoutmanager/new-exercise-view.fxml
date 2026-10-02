@@ -35,6 +35,16 @@
     </HBox>
 
     <HBox>
+        <Label text="Movement type: "/>
+        <ComboBox fx:id="movementTypeSelection"/>
+    </HBox>
+
+    <HBox>
+        <Label text="Suitable Sections: "/>
+        <ListView fx:id="suitableSectionSelection"/>
+    </HBox>
+
+    <HBox>
         <Label text="Muscle groups: "/>
         <ListView fx:id="muscleGroupSelection"/>
     </HBox>

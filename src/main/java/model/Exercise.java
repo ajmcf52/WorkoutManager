@@ -1,11 +1,9 @@
 package model;
 
-import enums.Difficulty;
-import enums.Equipment;
-import enums.MuscleGroup;
-import enums.PrescriptionType;
+import enums.*;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 /*
 Defines an exercise in the program.
@@ -18,7 +16,9 @@ public class Exercise {
     private EnumSet<MuscleGroup> muscleGroups;
     private Difficulty difficulty;
     private Equipment equipment;
-    private PrescriptionType modality;
+    private PrescriptionType prescriptionType;
+    private MovementType movementType;
+    private Set<SectionType> suitableSections;
     /*
     Jackson-friendly constructor.
     In place so JSON parser can properly make Exercise objects.
@@ -32,14 +32,17 @@ public class Exercise {
                     EnumSet<MuscleGroup> muscleGroups,
                     Difficulty difficulty,
                     Equipment equipment,
-                    PrescriptionType modality){
+                    PrescriptionType modality,
+                    MovementType movementType,
+                    Set<SectionType> suitableSections){
         this.name = name;
         this.demoLink = demoLink;
         this.instructions = instructions;
         this.muscleGroups = muscleGroups;
         this.difficulty = difficulty;
         this.equipment = equipment;
-        this.modality = modality;
+        this.prescriptionType = modality;
+        this.suitableSections = suitableSections;
     }
 
     /*
@@ -63,9 +66,15 @@ public class Exercise {
     public EnumSet<MuscleGroup> getMuscleGroups() { return this.muscleGroups; }
     public Difficulty getDifficulty() { return this.difficulty; }
     public Equipment getEquipment() { return this.equipment; }
-
     public PrescriptionType getPrescriptionType() {
-        return modality;
+        return prescriptionType;
+    }
+    public MovementType getMovementType() {
+        return movementType;
+    }
+
+    public Set<SectionType> getSuitableSections() {
+        return suitableSections;
     }
     // setters
 
@@ -76,7 +85,15 @@ public class Exercise {
     public void setDifficulty(Difficulty difficulty) { this.difficulty = difficulty; }
     public void setEquipment(Equipment equipment) { this.equipment = equipment; }
 
+    public void setMovementType(MovementType movementType) {
+        this.movementType = movementType;
+    }
+
+    public void setSuitableSections(Set<SectionType> suitableSections) {
+        this.suitableSections = suitableSections;
+    }
+
     public void setPrescriptionType(PrescriptionType modality) {
-        this.modality = modality;
+        this.prescriptionType = modality;
     }
 }
