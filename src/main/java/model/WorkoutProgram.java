@@ -1,6 +1,10 @@
 package model;
 
-import java.util.ArrayList;
+import enums.DurationUnit;
+import enums.MovementType;
+import enums.PrescriptionType;
+import enums.SectionType;
+
 import java.util.List;
 
 /*
@@ -40,7 +44,21 @@ public class WorkoutProgram {
 
     @Override
     public String toString() {
-        return getProgramName() + ": " + getWorkoutSections().size() + " sections.";
+        String stringValue = "";
+        // adding warmup component first.
+        for (int i = 0; i < this.workoutSections.size(); i++) {
+
+            stringValue += this.workoutSections.get(i).getSectionType().toString() + "\n";
+            WorkoutSection workoutSection = this.workoutSections.get(i);
+
+            for (int j = 0; j < workoutSection.getExercises().size(); j++) {
+
+                ProgramExercise programExercise = workoutSection.getExercises().get(j);
+                stringValue += programExercise.toString() + "\n";
+            }
+            stringValue += "\n";
+        }
+        return stringValue;
     }
 
 }

@@ -6,6 +6,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import model.Exercise;
 
@@ -45,6 +46,9 @@ public class NewExerciseController {
     private ListView<MuscleGroup> muscleGroupSelection;
 
     @FXML
+    private HBox muscleGroupContainer;
+
+    @FXML
     private TextField exerciseDemoUrl;
 
     @FXML
@@ -52,9 +56,6 @@ public class NewExerciseController {
 
     @FXML
     private Label errorMessageIndicator;
-
-    @FXML
-    private Button saveButton;
 
     @FXML
     private Button cancelButton;
@@ -121,6 +122,23 @@ public class NewExerciseController {
 
     }
 
+    @FXML
+    private void onMovementTypeSelection() {
+        MovementType movementType = movementTypeSelection.getValue();
+        if (movementType == null) {
+            return;
+        }
+        if (movementType == MovementType.CARDIO) {
+            muscleGroupSelection.getSelectionModel().clearSelection();
+            muscleGroupContainer.setVisible(false);
+            muscleGroupContainer.setManaged(false);
+        }
+        else {
+            muscleGroupContainer.setVisible(true);
+            muscleGroupContainer.setManaged(true);
+        }
+    }
+
     /*
     take values from the form, validate,
     create new Exercise object, and pass it to ExerciseLibraryController.
@@ -181,27 +199,27 @@ public class NewExerciseController {
         ObservableList<MuscleGroup> selectedMuscleGroups = muscleGroupSelection.
                 selectionModelProperty().getValue().getSelectedItems();
 
-        if (selectedMuscleGroups.isEmpty()) {
+        // if MovementType is Cardio, muscle group selection is nullified.
+        if (selectedMuscleGroups.isEmpty() && movementType != MovementType.CARDIO) {
             triggerErrorMessage("Please set one or more muscle groups.");
             return;
         }
-        EnumSet<MuscleGroup> muscleGroups = EnumSet.copyOf(selectedMuscleGroups);
+        EnumSet<MuscleGroup> muscleGroups = movementType == MovementType.CARDIO ?
+                null : EnumSet.copyOf(selectedMuscleGroups);
 
+        // demo link optional; if input supplied, we validate the URL.
         String demoLink = exerciseDemoUrl.getText();
-        boolean isLinkValid = validateURL(demoLink);
+        if (!demoLink.isEmpty()) {
+            boolean isLinkValid = validateURL(demoLink);
 
-        if (!isLinkValid) {
-            triggerErrorMessage("Please provide a valid demo URL.");
-            return;
+            if (!isLinkValid) {
+                triggerErrorMessage("Please provide a valid demo URL, or no URL at all.");
+                return;
+            }
         }
 
+        // instructions optional; no validation
         String instructions = exerciseInstructions.getText();
-
-        // instructions
-        if (instructions.isBlank()) {
-            triggerErrorMessage("Please provide exercise instructions");
-            return;
-        }
 
         savedExercise = new Exercise(name,demoLink,instructions,
                 muscleGroups,difficulty,equipment,prescriptionType,

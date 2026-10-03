@@ -2,6 +2,7 @@ package com.workoutmanager;
 
 import enums.Difficulty;
 import enums.Equipment;
+import enums.MovementType;
 import enums.MuscleGroup;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -75,6 +76,9 @@ public class ExerciseLibraryController {
     @FXML
     private Hyperlink demoLink;
 
+    @FXML
+    private VBox instructionsContainer;
+
     private Consumer<Exercise> onExerciseCreated;
 
     /*
@@ -142,27 +146,47 @@ public class ExerciseLibraryController {
         equipmentLabel.setText(
                 "Equipment: " + exercise.getEquipment()
         );
+        if (exercise.getMovementType() != MovementType.CARDIO) {
+            muscleGroupsLabel.setText(
+                    "Muscle Groups: " +
+                            exercise.getMuscleGroups()
+                                    .stream()
+                                    .map(this::formatEnum)
+                                    .collect(Collectors.joining(", "))
+            );
+            showMuscleGroups();
+        }
+        else {
+            hideMuscleGroups();
+        }
 
-        muscleGroupsLabel.setText(
-                "Muscle Groups: " +
-                        exercise.getMuscleGroups()
-                                .stream()
-                                .map(this::formatEnum)
-                                .collect(Collectors.joining(", "))
-        );
+        // instruction detail handling
+        if (exercise.getInstructions().isEmpty()) {
+            hideInstructions();
+        }
+        else {
+            instructionsArea.setText(
+                    exercise.getInstructions()
+            );
+            showInstructions();
+        }
 
-        instructionsArea.setText(
-                exercise.getInstructions()
-        );
+        // demo link handling
+        if (exercise.getDemoLink().isEmpty()) {
+            hideDemoURL();
+        }
+        else {
+            demoLink.setText("Open Demo");
+            demoLink.setOnAction(event -> {
+                String url = exercise.getDemoLink();
 
-        demoLink.setText("Open Demo");
-        demoLink.setOnAction(event -> {
-            String url = exercise.getDemoLink();
+                if (url != null && !url.isBlank()) {
+                    openLink(url);
+                }
+            });
+            showDemoURL();
+        }
 
-            if (url != null && !url.isBlank()) {
-                openLink(url);
-            }
-        });
     }
 
     /*
@@ -250,6 +274,31 @@ public class ExerciseLibraryController {
         });
 
         exerciseTable.setItems(filteredExercises);
+    }
+
+    private void hideMuscleGroups() {
+        muscleGroupsLabel.setVisible(false);
+        muscleGroupsLabel.setManaged(false);
+    }
+    private void hideInstructions() {
+        instructionsContainer.setVisible(false);
+        instructionsContainer.setManaged(false);
+    }
+    private void hideDemoURL() {
+        demoLink.setVisible(false);
+        demoLink.setManaged(false);
+    }
+    private void showMuscleGroups() {
+        muscleGroupsLabel.setManaged(true);
+        muscleGroupsLabel.setVisible(true);
+    }
+    private void showInstructions() {
+        instructionsContainer.setManaged(true);
+        instructionsContainer.setVisible(true);
+    }
+    private void showDemoURL() {
+        demoLink.setManaged(true);
+        demoLink.setVisible(true);
     }
 
     @FXML

@@ -15,6 +15,7 @@ public enum MuscleGroup {
     HAMSTRINGS("Hamstrings"),
     SHOULDERS("Shoulders"),
     ADDUCTORS("Adductors"),
+    CORE("Core"),
     HIP_FLEXORS("Hip Flexors");
 
     private final String muscleGroupName;

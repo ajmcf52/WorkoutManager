@@ -36,7 +36,8 @@
 
     <HBox>
         <Label text="Movement type: "/>
-        <ComboBox fx:id="movementTypeSelection"/>
+        <ComboBox onAction="#onMovementTypeSelection"
+                  fx:id="movementTypeSelection"/>
     </HBox>
 
     <HBox>
@@ -44,7 +45,7 @@
         <ListView fx:id="suitableSectionSelection"/>
     </HBox>
 
-    <HBox>
+    <HBox fx:id="muscleGroupContainer">
         <Label text="Muscle groups: "/>
         <ListView fx:id="muscleGroupSelection"/>
     </HBox>
@@ -64,8 +65,7 @@
 
     <HBox>
         <Button text="Save"
-                onAction="#saveExerciseCreation"
-                fx:id="saveButton"/>
+                onAction="#saveExerciseCreation"/>
         <Button text="Cancel"
                 onAction="#cancelExerciseCreation"
                 fx:id="cancelButton"/>

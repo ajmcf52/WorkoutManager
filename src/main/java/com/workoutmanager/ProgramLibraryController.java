@@ -35,7 +35,7 @@ public class ProgramLibraryController {
     private VBox detailsPane;
 
     @FXML
-    private ListView<Exercise> programDetailsView;
+    private TextArea programDetailsView;
 
     private Consumer<WorkoutProgram> onProgramCreated;
 
@@ -69,8 +69,7 @@ public class ProgramLibraryController {
 
     @FXML
     private void showSelectedProgram(WorkoutProgram program) {
-        programDetailsView
-                .setItems(FXCollections.observableList(program.getExercises()));
+        programDetailsView.setText(program.toString());
         detailsPane.setVisible(true);
     }
 
@@ -100,14 +99,21 @@ public class ProgramLibraryController {
         controller.setExerciseList(allExercises);
 
         controller.setProgramNameAvailable(name -> {
-
+            if (allWorkoutPrograms.isEmpty()) {
+                return true;
+            }
             return allWorkoutPrograms.stream().noneMatch(program ->
-                    program.getProgramName().trim().equalsIgnoreCase(name.trim()));
+                    program != null &&
+                            program.getProgramName().trim()
+                                    .equalsIgnoreCase(name.trim()));
         });
 
         stage.showAndWait();
 
         WorkoutProgram program = controller.getWorkoutProgram();
+        if (program == null) {
+            return;
+        }
 
         onProgramCreated.accept(program);
     }
@@ -150,22 +156,6 @@ public class ProgramLibraryController {
                 }
                 else {
                     setText(program.getProgramName());
-                }
-            }
-        });
-
-        // set cell factory for program details pane
-        programDetailsView.setCellFactory(listView -> new ListCell<>() {
-
-            @Override
-            protected void updateItem(Exercise exercise, boolean isEmpty) {
-                super.updateItem(exercise, isEmpty);
-
-                if (isEmpty || exercise == null) {
-                    setText("");
-                }
-                else {
-                    setText(exercise.getName());
                 }
             }
         });

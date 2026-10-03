@@ -112,13 +112,47 @@ public class ProgramBuilderController {
         // setting selection possibilities for the three program section ListViews
         mainSearchedAvailable = new FilteredList<>(availableExercises);
         mainAvailableExercisesView.setItems(mainSearchedAvailable);
+        updatePredicate(mainSearchField, SectionType.MAIN_WORKOUT);
 
         warmupSearchedAvailable = new FilteredList<>(availableExercises);
         warmupAvailableExercisesView.setItems(warmupSearchedAvailable);
+        updatePredicate(warmupSearchField, SectionType.WARM_UP);
 
         cooldownSearchedAvailable = new FilteredList<>(availableExercises);
         cooldownAvailableExercisesView.setItems(cooldownSearchedAvailable);
+        updatePredicate(cooldownSearchField, SectionType.COOL_DOWN);
+    }
 
+    private void formatAvailableExerciseView(ListView<Exercise> exerciseListView) {
+        exerciseListView.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(Exercise exercise, boolean isEmpty) {
+                super.updateItem(exercise, isEmpty);
+
+                if (isEmpty || exercise == null) {
+                    setText(null);
+                }
+                else {
+                    setText(exercise.getName());
+                }
+            }
+        });
+    }
+
+    private void formatProgramExerciseView(ListView<ProgramExercise> programExerciseListView) {
+        programExerciseListView.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(ProgramExercise programExercise, boolean isEmpty) {
+                super.updateItem(programExercise, isEmpty);
+                if (isEmpty || programExercise == null) {
+                    setText(null);
+                }
+                else {
+                    setText(programExercise.toString());
+                }
+            }
+
+        });
     }
 
     @FXML
@@ -138,47 +172,11 @@ public class ProgramBuilderController {
         instead of a full block of text displaying all
         exercise info.
          */
-        mainAvailableExercisesView.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(Exercise exercise, boolean isEmpty) {
-                super.updateItem(exercise, isEmpty);
+        formatAvailableExerciseView(mainAvailableExercisesView);
+        formatAvailableExerciseView(warmupAvailableExercisesView);
+        formatAvailableExerciseView(cooldownAvailableExercisesView);
 
-                if (isEmpty || exercise == null) {
-                    setText(null);
-                }
-                else {
-                    setText(exercise.getName());
-                }
-            }
-        });
 
-        warmupAvailableExercisesView.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(Exercise exercise, boolean isEmpty) {
-                super.updateItem(exercise, isEmpty);
-
-                if (isEmpty || exercise == null) {
-                    setText(null);
-                }
-                else {
-                    setText(exercise.getName());
-                }
-            }
-        });
-
-        cooldownAvailableExercisesView.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(Exercise exercise, boolean isEmpty) {
-                super.updateItem(exercise, isEmpty);
-
-                if (isEmpty || exercise == null) {
-                    setText(null);
-                }
-                else {
-                    setText(exercise.getName());
-                }
-            }
-        });
 
         // clears possible "Program empty" error message
         // when user takes further action to modify program name/exercises.
@@ -207,18 +205,15 @@ public class ProgramBuilderController {
             clearErrorMessage();
         });
         
-        // search predicate listener
+        // search predicate listeners
         mainSearchField.textProperty().addListener(observable -> {
-            updatePredicate(mainSearchedAvailable,
-                    mainSearchField, SectionType.MAIN_WORKOUT);
+            updatePredicate(mainSearchField, SectionType.MAIN_WORKOUT);
         });
         warmupSearchField.textProperty().addListener(observable -> {
-            updatePredicate(warmupSearchedAvailable,
-                    warmupSearchField, SectionType.WARM_UP);
+            updatePredicate(warmupSearchField, SectionType.WARM_UP);
         });
         cooldownSearchField.textProperty().addListener(observable -> {
-            updatePredicate(cooldownSearchedAvailable,
-                    cooldownSearchField, SectionType.COOL_DOWN);
+            updatePredicate(cooldownSearchField, SectionType.COOL_DOWN);
         });
 
     }
@@ -281,7 +276,6 @@ public class ProgramBuilderController {
         ProgramExercise programExercise = controller.getProgramExercise();
 
         addExerciseToSection(sectionType, programExercise);
-        availableExercises.remove(exerciseToAdd);
     }
 
     /*
@@ -315,12 +309,15 @@ public class ProgramBuilderController {
     private void addExerciseToSection(SectionType sectionType, ProgramExercise programExercise) {
         if (sectionType == SectionType.COOL_DOWN) {
             cooldownProgramExercises.add(programExercise);
+            updateCooldownPredicate(cooldownSearchField.getText());
         }
         else if (sectionType == SectionType.WARM_UP) {
             warmupProgramExercises.add(programExercise);
+            updateWarmupPredicate(warmupSearchField.getText());
         }
         else {
             mainProgramExercises.add(programExercise);
+            updateMainPredicate(mainSearchField.getText());
         }
     }
 
@@ -365,14 +362,17 @@ public class ProgramBuilderController {
     private void removeExerciseFromSection(SectionType sectionType, ProgramExercise programExercise) {
         if (sectionType == SectionType.COOL_DOWN) {
             cooldownProgramExercises.remove(programExercise);
+            updateCooldownPredicate(cooldownSearchField.getText());
         }
         else if (sectionType == SectionType.WARM_UP) {
             warmupProgramExercises.remove(programExercise);
+            updateWarmupPredicate(warmupSearchField.getText());
         }
         else {
             mainProgramExercises.remove(programExercise);
+            updateMainPredicate(mainSearchField.getText());
         }
-        availableExercises.add(programExercise.getExercise());
+
     }
 
     /*
@@ -451,15 +451,64 @@ public class ProgramBuilderController {
     updates the search predicate on
     list of available exercises for specific program section views.
      */
-    private void updatePredicate(FilteredList<Exercise> filteredList,
-                                 TextField searchField,
+    private void updatePredicate(TextField searchField,
                                  SectionType sectionType) {
         String searchText = searchField.getText().trim().toLowerCase();
+        if (sectionType == SectionType.COOL_DOWN) {
+            updateCooldownPredicate(searchText);
+        }
+        else if (sectionType == SectionType.MAIN_WORKOUT) {
+            updateMainPredicate(searchText);
+        }
+        else {
+            updateWarmupPredicate(searchText);
+        }
 
-        mainSearchedAvailable.setPredicate(exercise -> {
-            return exercise.getSuitableSections().contains(sectionType)
+    }
+
+    /*
+    predicate helper function.
+    returns true if an exercise does not exist
+    in the list of program exercises, false otherwise.
+     */
+    private boolean sectionDoesNotContainExercise(ObservableList<ProgramExercise>
+                                            programExercises, Exercise exercise) {
+        return programExercises.stream().noneMatch(
+                programExercise ->
+                        programExercise.getExercise().equals(exercise)
+        );
+    }
+
+    /*
+    warm up predicate function.
+     */
+    private void updateWarmupPredicate(String searchText) {
+        warmupSearchedAvailable.setPredicate(exercise -> {
+            return exercise.getSuitableSections().contains(SectionType.WARM_UP)
                     && exercise.getName().toLowerCase().contains(searchText)
-                    && !filteredList.contains(exercise);
+                    && sectionDoesNotContainExercise(warmupProgramExercises, exercise);
+        });
+    }
+
+    /*
+    main workout predicate function
+     */
+    private void updateMainPredicate(String searchText) {
+        mainSearchedAvailable.setPredicate(exercise -> {
+            return exercise.getSuitableSections().contains(SectionType.MAIN_WORKOUT)
+                    && exercise.getName().toLowerCase().contains(searchText)
+                    && sectionDoesNotContainExercise(mainProgramExercises, exercise);
+        });
+    }
+
+    /*
+    cooldown predicate function.
+     */
+    private void updateCooldownPredicate(String searchText) {
+        cooldownSearchedAvailable.setPredicate(exercise -> {
+            return exercise.getSuitableSections().contains(SectionType.COOL_DOWN)
+                    && exercise.getName().toLowerCase().contains(searchText)
+                    && sectionDoesNotContainExercise(cooldownProgramExercises, exercise);
         });
     }
 

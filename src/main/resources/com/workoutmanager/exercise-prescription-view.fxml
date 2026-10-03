@@ -25,12 +25,15 @@
 
     <HBox fx:id="durationContainer"
           visible="false">
-        <Label text="Duration (s): "/>
+        <Label text="Duration: "/>
         <TextField fx:id="durationField"
                    prefWidth="30"/>
+        <Label text="Units: "/>
+        <ComboBox fx:id="durationUnitSelection" />
     </HBox>
 
-    <HBox>
+    <HBox fx:id="setRangeContainer"
+          visible="false">
         <Label text="Set Range: "/>
         <TextField fx:id="minSetsField"
                    prefWidth="25"/>

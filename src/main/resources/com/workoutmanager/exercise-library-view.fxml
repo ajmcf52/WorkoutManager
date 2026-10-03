@@ -67,8 +67,7 @@
           spacing="10"
           prefWidth="350">
 
-        <Label fx:id="nameLabel"
-                   text="Select an exercise"/>
+        <Label fx:id="nameLabel"/>
 
         <Label fx:id="difficultyLabel"
                text="Difficulty:"/>
@@ -79,16 +78,19 @@
         <Label fx:id="muscleGroupsLabel"
                text="Muscle Groups:"/>
 
-        <Label text="Instructions:"/>
-        <VBox styleClass="instructions-panel">
+
+        <VBox styleClass="instructions-panel"
+              fx:id="instructionsContainer">
+            <Label text="Instructions:"/>
             <TextArea fx:id="instructionsArea"
                       editable="false"
                       wrapText="true"
                       prefRowCount="8"/>
 
-            <Hyperlink fx:id="demoLink"
-                       text="Open Demo"/>
+
         </VBox>
+        <Hyperlink fx:id="demoLink"
+                   text="Open Demo"/>
     </VBox>
 
 </HBox>

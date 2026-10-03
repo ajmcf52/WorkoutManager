@@ -29,7 +29,9 @@
           prefWidth="350">
         <Label text="Selected Program: "/>
         <Label fx:id="selectedProgramLabel" />
-        <ListView fx:id="programDetailsView"/>
+        <TextArea editable="false"
+                  prefRowCount="15"
+                  fx:id="programDetailsView"/>
     </VBox>
 
 </HBox>

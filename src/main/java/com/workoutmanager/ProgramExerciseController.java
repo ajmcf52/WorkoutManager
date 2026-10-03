@@ -1,6 +1,8 @@
 package com.workoutmanager;
 
+import enums.DurationUnit;
 import enums.Intensity;
+import enums.MovementType;
 import enums.PrescriptionType;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -20,6 +22,9 @@ public class ProgramExerciseController {
 
     @FXML
     private Label exerciseLabel;
+
+    @FXML
+    private HBox setRangeContainer;
 
     @FXML
     private TextField minSetsField;
@@ -53,7 +58,16 @@ public class ProgramExerciseController {
     private TextField durationField;
 
     @FXML
+    private ComboBox<DurationUnit> durationUnitSelection;
+
+    @FXML
     private Label errorMessageDisplay;
+
+    private void hidePrescriptionFields() {
+        hideReps();
+        hideDuration();
+        hideSets();
+    }
 
     /*
     sets the exercise to be prescribed.
@@ -61,13 +75,20 @@ public class ProgramExerciseController {
     prescription type.
      */
     public void setExercise(Exercise exercise) {
+
         this.exercise = exercise;
+        hidePrescriptionFields();
+
         if (this.exercise.getPrescriptionType()
                 == PrescriptionType.DURATION) {
-            durationContainer.setVisible(true);
+            showDuration();
+            if (this.exercise.getMovementType() != MovementType.CARDIO) {
+                showSets();
+            }
         }
         else {
-            repRangeContainer.setVisible(true);
+            showReps();
+            showSets();
         }
     }
 
@@ -79,6 +100,7 @@ public class ProgramExerciseController {
     @FXML
     public void initialize() {
         intensitySelections.getItems().addAll(Intensity.values());
+        durationUnitSelection.getItems().addAll(DurationUnit.values());
 
         minRepsField.textProperty().addListener(observable -> {
             clearErrorMessage();
@@ -103,12 +125,12 @@ public class ProgramExerciseController {
         });
     }
 
-    public void clearErrorMessage() {
+    private void clearErrorMessage() {
         errorMessageDisplay.setText("");
         errorMessageDisplay.setVisible(false);
     }
 
-    public void triggerErrorMessage(String msg) {
+    private void triggerErrorMessage(String msg) {
         errorMessageDisplay.setText(msg);
         errorMessageDisplay.setVisible(true);
     }
@@ -116,60 +138,12 @@ public class ProgramExerciseController {
     /*
     saves a prescribed exercise to the program its being added to.
      */
-    public void savePrescribedExercise() {
+    @FXML
+    private void savePrescribedExercise() {
 
         // PERFORM VALIDATIONS
         // first, validate inputs common to both exercise types.
         // sets + intensity
-        String minSetsText = minSetsField.getText();
-        if (minSetsText.isEmpty()) {
-            triggerErrorMessage(
-                    "Please supply a minimum number of sets."
-            );
-            return;
-        }
-        int minSets = 0;
-        try {
-            minSets = Integer.parseInt(minSetsText);
-        } catch (NumberFormatException e) {
-            triggerErrorMessage(
-                    "Please supply a positive integer for \"Minimum Sets\"."
-            );
-            return;
-        }
-        if (minSets <= 0) {
-            triggerErrorMessage(
-                    "\"Minimum Sets\" must be a positive integer."
-            );
-            return;
-        }
-        String maxSetsText = maxSetsField.getText();
-        if (maxSetsText.isEmpty()) {
-            triggerErrorMessage(
-                    "Please supply a maximum number of sets."
-            );
-            return;
-        }
-        int maxSets = 0;
-        try {
-            maxSets = Integer.parseInt(maxSetsText);
-        } catch (NumberFormatException e) {
-            triggerErrorMessage("Please supply a positive integer for \"Maximum Sets\".");
-            return;
-        }
-        if (maxSets <= 0) {
-            triggerErrorMessage(
-                    "\"Maximum Sets\" must be a positive integer."
-            );
-            return;
-        }
-        if (minSets > maxSets) {
-            triggerErrorMessage(
-                    "MinSets must be less than MaxSets."
-            );
-            return;
-        }
-        // sets fully validated.
 
         Intensity intensity = intensitySelections.getValue();
         if (intensity == null) {
@@ -179,6 +153,66 @@ public class ProgramExerciseController {
             return;
         }
         // intensity validated.
+
+        // cardio isn't done in sets.
+        // so only validate sets if the exercise isn't cardio.
+
+        Integer minSets = null;
+        Integer maxSets = null;
+
+        if (exercise.getMovementType() != MovementType.CARDIO) {
+            String minSetsText = minSetsField.getText();
+            if (minSetsText.isEmpty()) {
+                triggerErrorMessage(
+                        "Please supply a minimum number of sets."
+                );
+                return;
+            }
+
+            try {
+                minSets = Integer.parseInt(minSetsText);
+            } catch (NumberFormatException e) {
+                triggerErrorMessage(
+                        "Please supply a positive integer for \"Minimum Sets\"."
+                );
+                return;
+            }
+            if (minSets <= 0) {
+                triggerErrorMessage(
+                        "\"Minimum Sets\" must be a positive integer."
+                );
+                return;
+            }
+            String maxSetsText = maxSetsField.getText();
+            if (maxSetsText.isEmpty()) {
+                triggerErrorMessage(
+                        "Please supply a maximum number of sets."
+                );
+                return;
+            }
+
+            try {
+                maxSets = Integer.parseInt(maxSetsText);
+            } catch (NumberFormatException e) {
+                triggerErrorMessage("Please supply a positive integer for \"Maximum Sets\".");
+                return;
+            }
+            if (maxSets <= 0) {
+                triggerErrorMessage(
+                        "\"Maximum Sets\" must be a positive integer."
+                );
+                return;
+            }
+            if (minSets > maxSets) {
+                triggerErrorMessage(
+                        "MinSets must be less than MaxSets."
+                );
+                return;
+            }
+            // sets fully validated.
+        }
+
+
 
         // now, we go into duration and rep-specific validations.
         // in each case, if we reach the end, a ProgramExercise will be created.
@@ -190,7 +224,7 @@ public class ProgramExerciseController {
             String durationText = durationField.getText();
             if (durationText.isEmpty()) {
                 triggerErrorMessage(
-                        "Please supply an exercise duration (sec)."
+                        "Please supply an exercise duration."
                 );
                 return;
             }
@@ -207,8 +241,14 @@ public class ProgramExerciseController {
                 triggerErrorMessage("Please supply a positive time duration.");
                 return;
             }
+            // validate time unit selection
+            DurationUnit durationUnit = durationUnitSelection.getValue();
+            if (durationUnit == null) {
+                triggerErrorMessage("Please select a duration unit (min/sec).");
+                return;
+            }
             programExercise = new ProgramExercise(exercise, minSets, maxSets, null, null,
-                    duration, intensity, notes);
+                    duration, durationUnit, intensity, notes);
         }
         else {
             String minRepsText = minRepsField.getText();
@@ -263,7 +303,7 @@ public class ProgramExerciseController {
             }
             //all validated up to this point.
             programExercise = new ProgramExercise(exercise, minSets, maxSets, minReps,
-                    maxReps, null, intensity, notes);
+                    maxReps, null, null, intensity, notes);
         }
         //finally, we have our newly created ProgramExercise for both cases.
         // value is set within if-else, so we can simply close the window.
@@ -271,13 +311,40 @@ public class ProgramExerciseController {
     }
 
     // window close helper
-    public void closeWindow() {
+    private void closeWindow() {
         Stage stage = (Stage) exerciseLabel.getScene().getWindow();
         stage.close();
     }
 
-    public void cancelPrescribedExercise() {
+    @FXML
+    private void cancelPrescribedExercise() {
         closeWindow();
     }
+
+    private void showSets() {
+        setRangeContainer.setManaged(true);
+        setRangeContainer.setVisible(true);
+    }
+    private void showReps() {
+        repRangeContainer.setManaged(true);
+        repRangeContainer.setVisible(true);
+    }
+    private void showDuration() {
+        durationContainer.setManaged(true);
+        durationContainer.setVisible(true);
+    }
+    private void hideSets() {
+        setRangeContainer.setManaged(false);
+        setRangeContainer.setVisible(false);
+    }
+    private void hideReps() {
+        repRangeContainer.setVisible(false);
+        repRangeContainer.setManaged(false);
+    }
+    private void hideDuration() {
+        durationContainer.setManaged(false);
+        durationContainer.setVisible(false);
+    }
+
 
 }

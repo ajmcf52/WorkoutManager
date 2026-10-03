@@ -42,6 +42,7 @@ public class Exercise {
         this.difficulty = difficulty;
         this.equipment = equipment;
         this.prescriptionType = modality;
+        this.movementType = movementType;
         this.suitableSections = suitableSections;
     }
 

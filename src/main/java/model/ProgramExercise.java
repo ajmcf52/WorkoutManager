@@ -1,6 +1,9 @@
 package model;
 
+import enums.DurationUnit;
 import enums.Intensity;
+import enums.MovementType;
+import enums.PrescriptionType;
 
 /*
 exercise within a program. different from a generic exercise.
@@ -16,7 +19,9 @@ public class ProgramExercise {
     private Integer minReps;
     private Integer maxReps;
 
-    private Integer durationSeconds;
+    private Integer duration;
+
+    private DurationUnit durationUnit;
 
     private Intensity intensity;
 
@@ -25,16 +30,82 @@ public class ProgramExercise {
     public ProgramExercise() {}
 
     public ProgramExercise(Exercise exercise, Integer minSets, Integer maxSets,
-                           Integer minReps, Integer maxReps, Integer durationSecs,
-                           Intensity intensity, String notes) {
+                           Integer minReps, Integer maxReps, Integer duration,
+                           DurationUnit durationUnit, Intensity intensity, String notes) {
         this.exercise = exercise;
         this.minSets = minSets;
         this.maxSets = maxSets;
         this.minReps = minReps;
         this.maxReps = maxReps;
-        this.durationSeconds = durationSecs;
+        this.duration = duration;
+        this.durationUnit = durationUnit;
         this.intensity = intensity;
         this.notes = notes;
+    }
+
+    @Override
+    public String toString() {
+        String stringValue = exercise.getName() + " -- ";
+
+        if (exercise.getPrescriptionType() == PrescriptionType.DURATION) {
+
+            if (exercise.getMovementType() != MovementType.CARDIO) {
+                stringValue += setsToString() + " x ";
+            }
+            stringValue += durationToString() + " -- ";
+        }
+        // handles everything rep-based.
+        else {
+            stringValue += setsToString() + " x " + repsToString() + " -- ";
+        }
+        stringValue += intensity.toString();
+        return stringValue;
+    }
+
+    /*
+   set format helper.
+    */
+    private String setsToString() {
+        String stringValue = "";
+        if (minSets == null || maxSets == null) {
+            return stringValue;
+        }
+        stringValue += String.valueOf(minSets);
+        if (minSets < maxSets) {
+            stringValue += "-" + String.valueOf(maxSets);
+        }
+        return stringValue;
+    }
+
+    /*
+    rep format helper.
+     */
+    private String repsToString() {
+        String stringValue = "";
+        if (minReps == null || maxReps == null) {
+            return stringValue;
+        }
+
+        stringValue += String.valueOf(minReps);
+        if (minReps < maxReps) {
+            stringValue += "-" + String.valueOf(maxReps);
+        }
+        return stringValue;
+    }
+
+    /*
+    duration format helper.
+     */
+    private String durationToString() {
+        String stringValue = "";
+
+        if (durationUnit == DurationUnit.MIN) {
+            stringValue += String.valueOf(duration) + " min";
+        }
+        else {
+            stringValue += String.valueOf(duration) + " sec";
+        }
+        return stringValue;
     }
 
     // getters and setters
@@ -59,9 +130,11 @@ public class ProgramExercise {
         return maxReps;
     }
 
-    public Integer getDurationSeconds() {
-        return durationSeconds;
+    public Integer getDuration() {
+        return duration;
     }
+
+    public DurationUnit getDurationUnit() { return durationUnit; }
 
     public Intensity getIntensity() {
         return intensity;
@@ -91,8 +164,12 @@ public class ProgramExercise {
         this.exercise = exercise;
     }
 
-    public void setDurationSeconds(Integer durationSeconds) {
-        this.durationSeconds = durationSeconds;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public void setDurationUnit(DurationUnit durationUnit) {
+        this.durationUnit = durationUnit;
     }
 
     public void setIntensity(Intensity intensity) {
