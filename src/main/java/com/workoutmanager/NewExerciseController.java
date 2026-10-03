@@ -68,6 +68,7 @@ public class NewExerciseController {
 
         //populate selections for equipment, difficulty, and muscle groups
         //removing first item in each case, as that is the NULL("All") option used in search filtering.
+
         ArrayList<Difficulty> exerciseDifficulties = new ArrayList<Difficulty>(Arrays.stream(Difficulty.values()).toList());
         exerciseDifficulties.removeFirst();
         difficultySelection.getItems().addAll(exerciseDifficulties);
@@ -77,12 +78,7 @@ public class NewExerciseController {
         exerciseEquipments.removeFirst();
         equipmentSelection.getItems().addAll(exerciseEquipments);
 
-        ArrayList<PrescriptionType> prescriptionTypes = new ArrayList<>
-                (Arrays.stream(PrescriptionType.values()).toList());
-        prescriptionTypeSelection.getItems().addAll(prescriptionTypes);
-
-        //TODO refactor above statements to more simply get all enum values.
-
+        prescriptionTypeSelection.getItems().addAll(PrescriptionType.values());
         movementTypeSelection.getItems().addAll(MovementType.values());
 
         suitableSectionSelection.getItems().addAll(SectionType.values());

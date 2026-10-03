@@ -5,39 +5,84 @@
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<VBox xmlns="http://javafx.com/javafx"
+<AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.workoutmanager.ProgramBuilderController"
             prefHeight="600.0" prefWidth="450.0">
-
     <HBox>
         <Label text="Program name: "/>
         <TextField fx:id="programNameField"/>
     </HBox>
+    <TabPane>
+        <Tab text="Warm Up">
+            <VBox>
 
-    <TextField fx:id="searchField"
-               promptText="Search available exercises"/>
+                <TextField fx:id="warmupSearchField"
+                           promptText="Search available exercises"/>
 
-    <ListView fx:id="availableExercisesView"
-               prefWidth="250"/>
+                <ListView fx:id="warmupAvailableExercisesView"
+                          prefWidth="250"/>
 
-    <Button text="Add to Program ->"
-            onAction="#addExerciseToProgram"/>
+                <Button text="Add to Program ->"
+                        onAction="#addWarmupExercise"/>
 
-    <ListView fx:id="programExercisesView"
-               prefWidth="250"/>
+                <ListView fx:id="warmupProgramExercisesView"
+                          prefWidth="250"/>
+                <Button text="Remove"
+                        onAction="#removeExerciseFromWarmup"/>
+            </VBox>
 
-    <Label fx:id="errorMessageIndicator"
-           visible="false"/>
+        </Tab>
+        <Tab text="Main Workout">
+            <VBox>
 
-    <HBox>
-        <Button text="Remove"
-                onAction="#removeExercise"/>
-        <Button text="Save Program"
-                onAction="#saveProgram"/>
-        <Button text="Cancel"
-                onAction="#cancelProgramCreation"/>
-    </HBox>
+                <TextField fx:id="mainSearchField"
+                           promptText="Search available exercises"/>
 
-</VBox>
+                <ListView fx:id="mainAvailableExercisesView"
+                          prefWidth="250"/>
+
+                <Button text="Add to Program ->"
+                        onAction="#addMainExercise"/>
+
+                <ListView fx:id="mainProgramExercisesView"
+                          prefWidth="250"/>
+                <Button text="Remove"
+                        onAction="#removeExerciseFromMain"/>
+
+            </VBox>
+        </Tab>
+        <Tab text="Cool Down">
+            <VBox>
+
+                <TextField fx:id="cooldownSearchField"
+                           promptText="Search available exercises"/>
+
+                <ListView fx:id="cooldownAvailableExercisesView"
+                          prefWidth="250"/>
+
+                <Button text="Add to Program ->"
+                        onAction="#addCooldownExercise"/>
+
+                <ListView fx:id="cooldownProgramExercisesView"
+                          prefWidth="250"/>
+                <Button text="Remove"
+                        onAction="#removeExerciseFromCooldown"/>
+
+            </VBox>
+
+        </Tab>
+    </TabPane>
+    <VBox>
+        <Label fx:id="errorMessageIndicator"
+               visible="false"/>
+        <HBox>
+            <Button text="Save Program"
+                    onAction="#saveProgram"/>
+            <Button text="Cancel"
+                    onAction="#cancelProgramCreation"/>
+        </HBox>
+    </VBox>
+
+
+</AnchorPane>
