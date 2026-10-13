@@ -13,15 +13,11 @@ half units are included.
 
 public enum Difficulty {
     NULL("All"),
-    ONE("★☆☆☆☆"),
-    ONE_AND_HALF("★½☆☆☆"),
-    TWO("★★☆☆☆"),
-    TWO_AND_HALF("★★½☆☆"),
-    THREE("★★★☆☆"),
-    THREE_AND_HALF("★★★½☆"),
-    FOUR("★★★★☆"),
-    FOUR_AND_HALF("★★★★½"),
-    FIVE("★★★★★");
+    BEGINNER("Beginner"),
+    NOVICE("Novice"),
+    INTERMEDIATE("Intermediate"),
+    ADVANCED("Advanced"),
+    EXPERT("Expert");
 
 
     private final String display;

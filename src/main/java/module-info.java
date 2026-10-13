@@ -2,6 +2,7 @@ module com.example.workoutmanager {
     requires javafx.controls;
     requires javafx.fxml;
 
+    requires org.xerial.sqlitejdbc;
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
     requires com.dlsc.formsfx;
