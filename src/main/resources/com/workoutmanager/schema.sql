@@ -99,7 +99,6 @@ CREATE TABLE IF NOT EXISTS ProgramExercise (
     program_exercise_id INTEGER PRIMARY KEY AUTOINCREMENT,
     workout_section_id INTEGER NOT NULL,
     exercise_id INTEGER NOT NULL,
-    UNIQUE(workout_section_id, exercise_id),
     min_sets INTEGER CHECK (min_sets IS NULL OR min_sets > 0),
     max_sets INTEGER CHECK (max_sets IS NULL OR max_sets > 0),
     min_reps INTEGER CHECK (min_reps IS NULL OR min_reps > 0),
@@ -111,6 +110,8 @@ CREATE TABLE IF NOT EXISTS ProgramExercise (
                                                 'MODERATE_HEAVY',
                                                 'HEAVY')),
     notes TEXT,
+
+    UNIQUE(workout_section_id, exercise_id),
 
     FOREIGN KEY (workout_section_id) REFERENCES WorkoutSection(workout_section_id)
                              ON DELETE CASCADE,

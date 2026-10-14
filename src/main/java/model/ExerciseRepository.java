@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import database.DatabaseConnection;
+import database.DatabaseInitializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,11 +61,10 @@ public class ExerciseRepository {
      */
     public List<Exercise> loadAll() {
 
-        try (Connection connection = DatabaseConnection.openConnection()) {
-            // testing if connection is valid.
-            System.out.println(connection.isValid(2));
+        try {
+            DatabaseInitializer.initialize();
         } catch (SQLException e) {
-            System.err.println("Error opening DB connection (DatabaseUtility)");
+            System.err.println("Error initializing DB (DatabaseInitializer)");
             throw new RuntimeException(e);
         }
 

@@ -10,7 +10,7 @@ non-instantiable DB utility class.
 responsible for opening connections.
  */
 public final class DatabaseConnection {
-    private static final String URL = "jdbc:sqlite:appdata/workoutmanager.db";
+    private static final String URL = "jdbc:sqlite:./appdata/workoutmanager.db";
 
     private DatabaseConnection() {}
 
@@ -22,10 +22,10 @@ public final class DatabaseConnection {
         //open the connection
         Connection connection = DriverManager.getConnection(URL);
 
-        // try to execute a basic statement
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("PRAGMA foreign_keys = on");
-        }
+//        // try to execute a basic statement
+//        try (Statement statement = connection.createStatement()) {
+//            statement.execute("PRAGMA foreign_keys = on");
+//        }
         return connection;
         // return Connection object
     }
