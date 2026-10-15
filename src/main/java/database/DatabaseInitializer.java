@@ -1,13 +1,8 @@
 package database;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.stream.Collectors;
+import java.io.*;
+import java.sql.*;
+import java.util.List;
 
 /*
 initializer class for our database.
@@ -18,50 +13,101 @@ public final class DatabaseInitializer {
 
     private DatabaseInitializer() {}
 
-    public static void initialize() throws SQLException {
-        String schemaString;
-        BufferedReader reader;
-        try {
-            InputStream inputStream = DatabaseInitializer.class.getResourceAsStream("/com/workoutmanager/schema.sql");
-            if (inputStream == null) {
-                System.err.println("InputStream object from schema.sql is null.");
-                throw new IllegalStateException();
-            }
-            reader = new BufferedReader(
-                    new InputStreamReader(inputStream));
-            schemaString = reader.readAllAsString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        boolean error = false;
-        Connection connection = null;
-        try {
-            connection = DatabaseConnection.openConnection();
-            System.out.println(connection.getMetaData().getURL());
-            connection.setAutoCommit(false);
+    private static void seedReferenceTables(Connection connection) throws SQLException {
+        List<String> sectionTypeNames = List.of("WARM_UP",
+                "MAIN_WORKOUT",
+                "COOL_DOWN");
+        List<String> muscleGroupNames = List.of("CORE",
+                "QUADS",
+                "ADDUCTORS",
+                "HAMSTRINGS",
+                "CALVES",
+                "GLUTES",
+                "HIP_FLEXORS",
+                "BICEPS",
+                "TRICEPS",
+                "CHEST",
+                "BACK",
+                "SHOULDERS");
+        List<String> equipmentNames = List.of("BARBELL",
+                "KETTLEBELL",
+                "BODYWEIGHT",
+                "CABLE",
+                "MACHINE",
+                "DUMBBELL",
+                "BOX",
+                "TRX");
 
+        String sql = """
+                INSERT OR IGNORE INTO SectionType(name) VALUES (?)
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (String sectionType : sectionTypeNames) {
+                statement.setString(1, sectionType);
+                statement.executeUpdate();
+            }
+        }
+        sql = """
+                INSERT OR IGNORE INTO Equipment(name) VALUES (?)
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (String equipmentName : equipmentNames) {
+                statement.setString(1, equipmentName);
+                statement.executeUpdate();
+            }
+        }
+        sql = """
+                INSERT OR IGNORE INTO MuscleGroup(name) VALUES (?)
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (String muscleGroupName : muscleGroupNames) {
+                statement.setString(1, muscleGroupName);
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    /*
+    initialize tables in the database
+    if they don't already exist.
+     */
+    private static void initializeSchema(Connection connection) throws SQLException, IOException {
+
+        InputStream inputStream = DatabaseInitializer.class.getResourceAsStream("/com/workoutmanager/schema.sql");
+        if (inputStream == null) {
+            throw new IllegalStateException("schema.sql not found.");
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            String schemaString = reader.readAllAsString();
             for (String command : schemaString.split(";")) {
                 if (!command.isBlank()) {
-                    Statement statement = connection.createStatement();
-                    statement.execute(command);
+                    try (Statement statement = connection.createStatement()) {
+                        statement.execute(command);
+                    }
                 }
             }
         }
-        catch (SQLException e) {
-            System.err.println("Error executing SQL schema");
-            error = true;
-            throw new RuntimeException(e);
-        }
-        finally {
-            assert connection != null;
-            if (error) {
-                connection.rollback();
-            }
-            else {
+    }
+
+    public static void initialize() throws SQLException, IOException {
+        try (Connection connection = DatabaseConnection.openConnection()) {
+
+            connection.setAutoCommit(false);
+
+            try {
+                // creates tables if they don't already exist
+                initializeSchema(connection);
+
+                // insert common static values into reference tables
+                seedReferenceTables(connection);
 
                 connection.commit();
+
+            } catch (RuntimeException | IOException e) {
+                connection.rollback();
+                throw e;
             }
-            connection.close();
         }
 
 
