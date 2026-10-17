@@ -1,5 +1,6 @@
 package com.workoutmanager;
 
+import database.DatabaseConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,6 +11,8 @@ import model.ProgramRepository;
 import model.WorkoutProgram;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /*
 main controller of the application.
@@ -46,6 +49,16 @@ public class MainController {
         exerciseRepository = new ExerciseRepository();
         allExercises = FXCollections.
                 observableList(exerciseRepository.loadAll());
+
+        // sanity checking the contents of our database.
+        try (Connection connection = DatabaseConnection.openConnection()) {
+            exerciseRepository.exerciseSanityCheck(allExercises, connection);
+        } catch (SQLException e) {
+            System.err.println("sanity check failed for exercise persistence.");
+            System.err.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
+
 
         programRepository = new ProgramRepository();
         allPrograms = FXCollections.

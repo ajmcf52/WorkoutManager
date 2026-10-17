@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import database.DatabaseConnection;
 import database.DatabaseInitializer;
+import enums.MuscleGroup;
+import enums.SectionType;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,11 +24,40 @@ us something we can make sense of.
 public class ExerciseRepository {
 
     /*
+    checks the data of exercises and muscle groups
+    to see if foreign key IDs are matching up.
+     */
+    public void exerciseSanityCheck(List<Exercise> exerciseList, Connection connection) throws SQLException {
+
+        String sql = """
+                SELECT e.name AS exercise_name, mg.name AS muscle_group_name
+                FROM Exercise AS e
+                JOIN ExerciseMuscleGroup AS emg
+                    ON e.exercise_id=emg.exercise_id
+                JOIN MuscleGroup AS mg
+                    ON emg.muscle_group_id=mg.muscle_group_id
+                WHERE e.name=?
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (Exercise exercise: exerciseList) {
+                statement.setString(1, exercise.getName());
+                try (ResultSet result = statement.executeQuery()) {
+                    while (result.next()) {
+                        System.out.println(result.getString("exercise_name")
+                                + " | " + result.getString("muscle_group_name"));
+                    }
+                }
+            }
+        }
+    }
+
+    /*
     method used to write Exercise rows into the database.
      */
     public int save(Exercise exercise, Connection connection) throws SQLException {
         String sql = """
-                INSERT OR IGNORE INTO Exercise(name, demo_url, instructions, difficulty,
+                INSERT INTO Exercise(name, demo_url, instructions, difficulty,
                 movement_type, prescription_type)
                  VALUES(?, ?, ?, ?, ?, ?)
                 """;
@@ -54,14 +85,80 @@ public class ExerciseRepository {
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
-                    int exerciseId = keys.getInt(1);
-                    System.out.println("id: " + exerciseId);
-                    return exerciseId;
+                    return keys.getInt(1);
+
                 }
             }
         }
         // if no generated key is returned, throw an exception.
         throw new SQLException("Exercise inserted; no generated key returned.");
+    }
+
+    /*
+    writes junction table entries according to a specific
+    exercise that has just been written and saved.
+     */
+    public void saveMuscleGroups(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+
+        /*      some exercises (like Treadmill Walk) don't target any
+                specific muscle(s), hence we will have no junction rows.
+        */
+        if (exercise.getMuscleGroups() == null) {
+            return;
+        }
+
+        String sql = """
+                INSERT INTO ExerciseMuscleGroup(exercise_id, muscle_group_id)
+                VALUES(?,(SELECT muscle_group_id FROM MuscleGroup WHERE name=?))
+                """;
+
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            for (MuscleGroup muscleGroup : exercise.getMuscleGroups()) {
+                statement.setInt(1, exerciseId);
+                statement.setString(2, muscleGroup.name());
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    /*
+    save junction entry for equipment
+    according to an exercise.
+     */
+    public void saveEquipment(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+
+        String sql = """
+                INSERT INTO ExerciseEquipment(exercise_id, equipment_id)
+                VALUES(?,(SELECT equipment_id FROM Equipment WHERE name=?))
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, exerciseId);
+            statement.setString(2, exercise.getEquipment().name());
+            statement.executeUpdate();
+        }
+    }
+
+    /*
+    write junction table entries for suitable sections
+    according to a given exercise.
+     */
+    public void saveSuitableSections(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+
+        String sql = """
+                INSERT INTO SuitableSections(exercise_id, section_type_id)
+                VALUES(?, (SELECT section_type_id FROM SectionType WHERE name=?))
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (SectionType sectionType : exercise.getSuitableSections()) {
+                statement.setInt(1, exerciseId);
+                statement.setString(2, sectionType.name());
+                statement.executeUpdate();
+            }
+        }
     }
 
     /*
@@ -81,7 +178,10 @@ public class ExerciseRepository {
 
             try {
                 for (Exercise exercise : exerciseList) {
-                    save(exercise, connection);
+                    int exerciseId = save(exercise, connection);
+                    saveMuscleGroups(exerciseId, exercise, connection);
+                    saveEquipment(exerciseId, exercise, connection);
+                    saveSuitableSections(exerciseId, exercise, connection);
                 }
                 connection.commit();
             }
