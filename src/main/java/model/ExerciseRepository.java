@@ -6,15 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import database.DatabaseConnection;
 import database.DatabaseInitializer;
-import enums.MuscleGroup;
-import enums.SectionType;
+import enums.*;
 
+import javax.xml.transform.Result;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.util.List;
+import java.util.*;
 
 /*
 responsible for parsing the exercise JSON file, deserializing the data and giving
@@ -225,6 +225,137 @@ public class ExerciseRepository {
             System.err.println("Data migrator failed to write: exercises.json");
             throw new RuntimeException(e);
         }
+    }
+
+    /*
+    helper for loading an exercise's equipment from JDBC
+     */
+    public Equipment loadEquipment(Connection connection, int exerciseId) throws SQLException {
+        String sql = """
+                SELECT e.name AS equipment_name
+                FROM Equipment e
+                JOIN ExerciseEquipment ee
+                ON e.equipment_id = ee.equipment_id
+                WHERE ee.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, exerciseId);
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return Equipment.valueOf(result.getString("equipment_name"));
+        }
+    }
+
+    /*
+    helper for loading an exercise's suitable sections from JDBC
+     */
+    public Set<SectionType> loadSuitableSections(Connection connection, int exerciseId) throws SQLException {
+        Set<SectionType> suitableSections = new HashSet<>();
+
+        String sql = """
+                SELECT st.name AS section_name
+                FROM SectionType st
+                JOIN SuitableSections ss
+                ON ss.section_type_id=st.section_type_id
+                WHERE ss.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, exerciseId);
+            ResultSet results = statement.executeQuery();
+            while (results.next()) {
+                SectionType sectionType = SectionType.valueOf(
+                        results.getString("section_name"));
+                suitableSections.add(sectionType);
+            }
+        }
+
+        return suitableSections;
+    }
+
+    /*
+    helper method for loading an exercise's muscle groups from JDBC
+     */
+    public EnumSet<MuscleGroup> loadMuscleGroups(Connection connection, int exerciseId) throws SQLException {
+        EnumSet<MuscleGroup> muscleGroups = EnumSet.noneOf(MuscleGroup.class);
+
+        String sql = """
+                SELECT mg.name AS muscle_group_name
+                FROM MuscleGroup mg
+                JOIN ExerciseMuscleGroup emg
+                ON mg.muscle_group_id=emg.muscle_group_id
+                WHERE emg.exercise_id=?
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, exerciseId);
+            ResultSet results = statement.executeQuery();
+            while (results.next()) {
+                MuscleGroup muscleGroup = MuscleGroup.valueOf(
+                        results.getString("muscle_group_name"));
+                muscleGroups.add(muscleGroup);
+            }
+        }
+
+        return muscleGroups;
+    }
+
+    /*
+    loads all exercises in the library from JDBC
+     */
+    public List<Exercise> loadAllFromDatabase(Connection connection) throws SQLException {
+        List<Exercise> exerciseList = new ArrayList<>();
+
+        String sql = """
+                SELECT *
+                FROM Exercise
+                ORDER BY exercise_id
+                """;
+        try (Statement statement = connection.createStatement()) {
+            ResultSet results = statement.executeQuery(sql);
+
+            while (results.next()) {
+
+                /*
+                reconstructing exercise objects from JDBC
+                 */
+                Exercise exercise = new Exercise();
+                exercise.setName(results.getString("name"));
+
+                // null value can pass through here...
+                exercise.setDemoLink(results.getString("demo_url"));
+
+                //...as well as here.
+                exercise.setInstructions(results.getString("instructions"));
+
+                Difficulty difficulty = Difficulty.valueOf(results.getString("difficulty"));
+                exercise.setDifficulty(difficulty);
+
+                MovementType movementType = MovementType.valueOf(results.getString("movement_type"));
+                exercise.setMovementType(movementType);
+
+                PrescriptionType prescriptionType = PrescriptionType.valueOf
+                        (results.getString("prescription_type"));
+                exercise.setPrescriptionType(prescriptionType);
+
+                int exerciseId = results.getInt("exercise_id");
+
+                /*
+                loading junction table results
+                 */
+                EnumSet<MuscleGroup> muscleGroups = loadMuscleGroups(connection, exerciseId);
+                exercise.setMuscleGroups(muscleGroups);
+
+                Set<SectionType> suitableSections = loadSuitableSections(connection, exerciseId);
+                exercise.setSuitableSections(suitableSections);
+
+                Equipment equipment = loadEquipment(connection, exerciseId);
+                exercise.setEquipment(equipment);
+
+
+                exerciseList.add(exercise);
+            }
+        }
+        return exerciseList;
     }
 
     /*

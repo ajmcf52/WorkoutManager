@@ -47,18 +47,14 @@ public class MainController {
 
         // step 1 -- load data (exercises, programs)
         exerciseRepository = new ExerciseRepository();
-        allExercises = FXCollections.
-                observableList(exerciseRepository.loadAll());
 
-        // sanity checking the contents of our database.
         try (Connection connection = DatabaseConnection.openConnection()) {
-            exerciseRepository.exerciseSanityCheck(allExercises, connection);
+            allExercises = FXCollections.
+                    observableList(exerciseRepository.loadAllFromDatabase(connection));
         } catch (SQLException e) {
-            System.err.println("sanity check failed for exercise persistence.");
-            System.err.println(e.getMessage());
+            System.err.println("Error loading exercises from JDBC. Exiting now.");
             throw new RuntimeException(e);
         }
-
 
         programRepository = new ProgramRepository();
         allPrograms = FXCollections.
