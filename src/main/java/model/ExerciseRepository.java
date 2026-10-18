@@ -23,6 +23,42 @@ us something we can make sense of.
 
 public class ExerciseRepository {
 
+    public void deletionSanityCheck() {
+
+    }
+
+    public void creationSanityCheck(int exerciseId, Connection connection) {
+        String sqlMuscleGroup = """
+                SELECT e.name AS exercise_name, mg.name AS muscle_group_name
+                FROM Exercise e
+                JOIN ExerciseMuscleGroup emg
+                ON e.exercise_id=emg.exercise_id
+                JOIN MuscleGroup mg
+                ON emg.muscle_group_id=mg.muscle_group_id
+                WHERE e.exercise_id=?
+                """;
+
+        String sqlSuitableSections = """
+                SELECT e.name AS exercise_name, st.name AS section_type_name
+                FROM Exercise e
+                JOIN SuitableSections ss
+                ON e.exercise_id=ss.exercise_id
+                JOIN SectionType st
+                ON ss.section_type_id=st.section_type_id
+                WHERE e.exercise_id=?
+                """;
+
+        String sqlEquipment = """
+                SELECT e.name AS exercise_name, eq.name AS equipment_name
+                FROM Exercise e
+                JOIN ExerciseEquipment ee
+                ON e.exercise_id=ee.exercise_id
+                JOIN Equipment eq
+                ON eq.equipment_id=ee.equipment_id
+                WHERE e.exercise_id=?
+                """;
+    }
+
     /*
     checks the data of exercises and muscle groups
     to see if foreign key IDs are matching up.
@@ -49,6 +85,20 @@ public class ExerciseRepository {
                     }
                 }
             }
+        }
+    }
+
+    /*
+    deletes a given Exercise from JDBC
+     */
+    public void delete(Exercise exercise, Connection connection) throws SQLException {
+        String sql = """
+                DELETE FROM Exercise e
+                WHERE e.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, exercise.getExerciseId());
+            statement.executeUpdate();
         }
     }
 
@@ -319,6 +369,7 @@ public class ExerciseRepository {
                 reconstructing exercise objects from JDBC
                  */
                 Exercise exercise = new Exercise();
+                exercise.setExerciseId(results.getInt("exercise_id"));
                 exercise.setName(results.getString("name"));
 
                 // null value can pass through here...

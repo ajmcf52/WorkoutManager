@@ -4,7 +4,6 @@ import enums.Difficulty;
 import enums.Equipment;
 import enums.MovementType;
 import enums.MuscleGroup;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -17,12 +16,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exercise;
-import model.ExerciseRepository;
-import model.ProgramRepository;
-import model.WorkoutProgram;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -31,8 +27,6 @@ public class ExerciseLibraryController {
     private TableView<Exercise> exerciseTable;
 
     private FilteredList<Exercise> filteredExercises;
-
-    private ObservableList<WorkoutProgram> allPrograms;
 
     @FXML
     private TableColumn<Exercise, String> nameColumn;
@@ -81,6 +75,8 @@ public class ExerciseLibraryController {
 
     private Consumer<Exercise> onExerciseCreated;
 
+    private Consumer<Exercise> onExerciseDeleted;
+
     /*
     public setter. allows Main controller to inject all exercise data.
      */
@@ -96,6 +92,8 @@ public class ExerciseLibraryController {
     public void setOnExerciseCreated(Consumer<Exercise> callback) {
         this.onExerciseCreated = callback;
     }
+
+    public void setOnExerciseDeleted(Consumer<Exercise> callback) { this.onExerciseDeleted = callback; }
 
     /*
     enum format helper function.
@@ -187,6 +185,27 @@ public class ExerciseLibraryController {
             showDemoURL();
         }
 
+    }
+
+    /*
+    handles exercise deletion from the UI
+     */
+    @FXML
+    private void deleteExercise() {
+        Exercise selected = exerciseTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            return;
+        }
+
+        // confirm deletion to avoid misclicks
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Exercise");
+        alert.setHeaderText("Delete \"" + selected.getName() + "\"?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            onExerciseDeleted.accept(selected);
+        }
     }
 
     /*

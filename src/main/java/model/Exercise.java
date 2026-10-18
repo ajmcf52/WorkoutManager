@@ -10,6 +10,7 @@ Defines an exercise in the program.
  */
 
 public class Exercise {
+    private Integer exerciseId; //JDBC authoritative field
     private String name;
     private String demoLink; //YouTube URL; intended as a clickable link.
     private String instructions; // how to do the exercise.
@@ -61,6 +62,7 @@ public class Exercise {
 
     // getters
 
+    public Integer getExerciseId() { return this.exerciseId; }
     public String getName() { return this.name; }
     public String getInstructions() { return this.instructions; }
     public String getDemoLink() { return this.demoLink; }
@@ -77,8 +79,9 @@ public class Exercise {
     public Set<SectionType> getSuitableSections() {
         return suitableSections;
     }
-    // setters
 
+    // setters
+    public void setExerciseId(Integer exerciseId) { this.exerciseId = exerciseId; }
     public void setName(String name) { this.name = name; }
     public void setInstructions(String instructions) { this.instructions = instructions; }
     public void setDemoLink(String demoLink) { this.demoLink = demoLink; }

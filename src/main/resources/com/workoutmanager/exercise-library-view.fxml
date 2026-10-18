@@ -42,6 +42,11 @@
                 onAction="#createNewExerciseWindow"
                 textAlignment="CENTER"/>
 
+        <Button text="Delete exercise"
+                styleClass="filter-control"
+                onAction="#deleteExercise"
+                textAlignment="CENTER" />
+
     </VBox>
     <TableView
             fx:id="exerciseTable"

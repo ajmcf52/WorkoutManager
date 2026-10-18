@@ -67,10 +67,33 @@ public class MainController {
 
         // step 3 -- callback setup
 
-        //new exercise creation CB
+        //new exercise creation CB (JDBC)
         exerciseLibraryController.setOnExerciseCreated(exercise -> {
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                int exerciseId = exerciseRepository.save(exercise, connection);
+                exercise.setExerciseId(exerciseId);
+            }
+            catch (SQLException e) {
+                System.err.println("Exercise failed to write (JDBC). Exiting now.");
+                throw new RuntimeException(e);
+            }
+
             allExercises.add(exercise);
-            exerciseRepository.saveAll(allExercises);
+        });
+
+        // exercise deletion callback (JDBC)
+        exerciseLibraryController.setOnExerciseDeleted(exercise -> {
+
+            allExercises.remove(exercise);
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                    exerciseRepository.delete(exercise,connection);
+            }
+            catch (SQLException e) {
+                System.err.println("Exercise deletion failed in JDBC. Exiting.");
+                throw new RuntimeException(e);
+            }
         });
 
         // new workout program CB
