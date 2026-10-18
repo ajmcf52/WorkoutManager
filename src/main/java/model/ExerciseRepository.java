@@ -8,7 +8,6 @@ import database.DatabaseConnection;
 import database.DatabaseInitializer;
 import enums.*;
 
-import javax.xml.transform.Result;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,12 +22,10 @@ us something we can make sense of.
 
 public class ExerciseRepository {
 
-    public void deletionSanityCheck() {
-
-    }
-
-    public void creationSanityCheck(int exerciseId, Connection connection) {
-        String sqlMuscleGroup = """
+    /*
+    QUERIES USED FOR TESTING
+     */
+    private static final String MG_INSPECTION = """
                 SELECT e.name AS exercise_name, mg.name AS muscle_group_name
                 FROM Exercise e
                 JOIN ExerciseMuscleGroup emg
@@ -38,7 +35,7 @@ public class ExerciseRepository {
                 WHERE e.exercise_id=?
                 """;
 
-        String sqlSuitableSections = """
+    private static final String SS_INSPECTION = """
                 SELECT e.name AS exercise_name, st.name AS section_type_name
                 FROM Exercise e
                 JOIN SuitableSections ss
@@ -48,7 +45,7 @@ public class ExerciseRepository {
                 WHERE e.exercise_id=?
                 """;
 
-        String sqlEquipment = """
+    private static final String EQ_INSPECTION = """
                 SELECT e.name AS exercise_name, eq.name AS equipment_name
                 FROM Exercise e
                 JOIN ExerciseEquipment ee
@@ -57,32 +54,144 @@ public class ExerciseRepository {
                 ON eq.equipment_id=ee.equipment_id
                 WHERE e.exercise_id=?
                 """;
+
+    /*
+    script used to eliminate orphan rows from foreign key
+    enforcement not being in place within DatabaseConnection.openConnection()
+     */
+    public void cleanUpOrphanedRows(Connection connection) throws SQLException {
+
+        String cleanEe = """
+                DELETE FROM ExerciseEquipment
+                WHERE exercise_id NOT IN (
+                    SELECT exercise_id
+                    FROM Exercise)
+                """;
+
+        String cleanEmg = """
+                DELETE FROM ExerciseMuscleGroup
+                WHERE exercise_id NOT IN (
+                    SELECT exercise_id
+                    FROM Exercise)
+                """;
+
+        String cleanSs = """
+                DELETE FROM SuitableSections
+                WHERE exercise_id NOT IN (
+                    SELECT exercise_id
+                    FROM Exercise)
+                """;
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(cleanEe);
+            statement.execute(cleanEmg);
+            statement.execute(cleanSs);
+        }
+
+
     }
 
     /*
-    checks the data of exercises and muscle groups
-    to see if foreign key IDs are matching up.
+    inspecting table rows following
+    deletion--queries should return
+    zero.
      */
-    public void exerciseSanityCheck(List<Exercise> exerciseList, Connection connection) throws SQLException {
-
-        String sql = """
-                SELECT e.name AS exercise_name, mg.name AS muscle_group_name
-                FROM Exercise AS e
-                JOIN ExerciseMuscleGroup AS emg
-                    ON e.exercise_id=emg.exercise_id
-                JOIN MuscleGroup AS mg
-                    ON emg.muscle_group_id=mg.muscle_group_id
-                WHERE e.name=?
+    public void deletionSanityCheck(int exerciseId, Connection connection) throws SQLException {
+        String ssRowCount = """
+                SELECT COUNT(*) AS row_count
+                FROM SuitableSections ss
+                WHERE ss.exercise_id=?
                 """;
+        try (PreparedStatement statement = connection.prepareStatement(ssRowCount)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    System.out.println("SuitableSection Delete test passed: " +
+                            (result.getInt("row_count") == 0));
+                }
+            }
+        }
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            for (Exercise exercise: exerciseList) {
-                statement.setString(1, exercise.getName());
-                try (ResultSet result = statement.executeQuery()) {
-                    while (result.next()) {
-                        System.out.println(result.getString("exercise_name")
-                                + " | " + result.getString("muscle_group_name"));
-                    }
+        String mgRowCount = """
+                SELECT COUNT(*) AS row_count
+                FROM ExerciseMuscleGroup emg
+                WHERE emg.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(mgRowCount)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    System.out.println("Exercise Muscle Group Delete test passed: " +
+                            (result.getInt("row_count") == 0));
+                }
+            }
+        }
+
+        String eqRowCount = """
+                SELECT COUNT(*) AS row_count
+                FROM ExerciseEquipment ee
+                WHERE ee.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(eqRowCount)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    System.out.println("Exercise Equipment Delete test passed: " +
+                            (result.getInt("row_count") == 0));
+                }
+            }
+        }
+
+        String exRowCount = """
+                SELECT COUNT(*) AS row_count
+                FROM Exercise e
+                WHERE e.exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(exRowCount)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    System.out.println("Exercise delete test passed: " +
+                            (result.getInt("row_count") == 0));
+                }
+            }
+        }
+    }
+
+    /*
+    inspecting junction table rows
+    following exercise creation to
+    ensure FK relations have been
+    established properly.
+     */
+    public void creationSanityCheck(int exerciseId, Connection connection) throws SQLException {
+
+        try (PreparedStatement statement = connection.prepareStatement(MG_INSPECTION)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    System.out.println(results.getString("exercise_name") + " | "
+                    + results.getString("muscle_group_name"));
+                }
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement(SS_INSPECTION)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    System.out.println(results.getString("exercise_name") + " | "
+                    + results.getString("section_type_name"));
+                }
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement(EQ_INSPECTION)) {
+            statement.setInt(1, exerciseId);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    System.out.println(results.getString("exercise_name") + " | "
+                    + results.getString("equipment_name"));
                 }
             }
         }
@@ -93,19 +202,23 @@ public class ExerciseRepository {
      */
     public void delete(Exercise exercise, Connection connection) throws SQLException {
         String sql = """
-                DELETE FROM Exercise e
-                WHERE e.exercise_id=?
+                DELETE FROM Exercise
+                WHERE exercise_id=?
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, exercise.getExerciseId());
             statement.executeUpdate();
         }
+
+        deletionSanityCheck(exercise.getExerciseId(), connection);
+
     }
 
     /*
     method used to write Exercise rows into the database.
      */
     public int save(Exercise exercise, Connection connection) throws SQLException {
+
         String sql = """
                 INSERT INTO Exercise(name, demo_url, instructions, difficulty,
                 movement_type, prescription_type)
@@ -133,10 +246,14 @@ public class ExerciseRepository {
             statement.setString(6, exercise.getPrescriptionType().name());
 
             statement.executeUpdate();
+
+
+
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
-                    return keys.getInt(1);
-
+                    int exerciseId = keys.getInt(1);
+                    creationSanityCheck(exerciseId, connection);
+                    return exerciseId;
                 }
             }
         }
@@ -290,10 +407,14 @@ public class ExerciseRepository {
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, exerciseId);
-            ResultSet result = statement.executeQuery();
-            result.next();
-            return Equipment.valueOf(result.getString("equipment_name"));
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return Equipment.valueOf(result.getString("equipment_name"));
+                }
+            }
         }
+
+        throw new SQLException("Error: Exercise with ID " + exerciseId + " was found to have no equipment.");
     }
 
     /*
@@ -311,12 +432,17 @@ public class ExerciseRepository {
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, exerciseId);
-            ResultSet results = statement.executeQuery();
-            while (results.next()) {
-                SectionType sectionType = SectionType.valueOf(
-                        results.getString("section_name"));
-                suitableSections.add(sectionType);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    SectionType sectionType = SectionType.valueOf(
+                            results.getString("section_name"));
+                    suitableSections.add(sectionType);
+                }
             }
+        }
+
+        if (suitableSections.isEmpty()) {
+            throw new SQLException("Error: Exercise ID " + exerciseId + " found to have no suitable sections.");
         }
 
         return suitableSections;
@@ -338,14 +464,15 @@ public class ExerciseRepository {
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, exerciseId);
-            ResultSet results = statement.executeQuery();
-            while (results.next()) {
-                MuscleGroup muscleGroup = MuscleGroup.valueOf(
-                        results.getString("muscle_group_name"));
-                muscleGroups.add(muscleGroup);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    MuscleGroup muscleGroup = MuscleGroup.valueOf(
+                            results.getString("muscle_group_name"));
+                    muscleGroups.add(muscleGroup);
+                }
             }
         }
-
+        // EnumSet can be empty in the case of cardio.
         return muscleGroups;
     }
 

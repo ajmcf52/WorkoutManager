@@ -22,10 +22,10 @@ public final class DatabaseConnection {
         //open the connection
         Connection connection = DriverManager.getConnection(URL);
 
-//        // try to execute a basic statement
-//        try (Statement statement = connection.createStatement()) {
-//            statement.execute("PRAGMA foreign_keys = on");
-//        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA foreign_keys = on");
+        }
+
         return connection;
         // return Connection object
     }

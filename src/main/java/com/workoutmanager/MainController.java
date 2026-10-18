@@ -51,6 +51,9 @@ public class MainController {
         try (Connection connection = DatabaseConnection.openConnection()) {
             allExercises = FXCollections.
                     observableList(exerciseRepository.loadAllFromDatabase(connection));
+
+            //exerciseRepository.cleanUpOrphanedRows(connection);
+
         } catch (SQLException e) {
             System.err.println("Error loading exercises from JDBC. Exiting now.");
             throw new RuntimeException(e);
@@ -72,6 +75,11 @@ public class MainController {
 
             try (Connection connection = DatabaseConnection.openConnection()) {
                 int exerciseId = exerciseRepository.save(exercise, connection);
+
+                exerciseRepository.saveSuitableSections(exerciseId, exercise, connection);
+                exerciseRepository.saveEquipment(exerciseId, exercise, connection);
+                exerciseRepository.saveMuscleGroups(exerciseId, exercise, connection);
+
                 exercise.setExerciseId(exerciseId);
             }
             catch (SQLException e) {

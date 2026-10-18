@@ -159,7 +159,7 @@ public class ExerciseLibraryController {
         }
 
         // instruction detail handling
-        if (exercise.getInstructions().isEmpty()) {
+        if (exercise.getInstructions() == null || exercise.getInstructions().isEmpty()) {
             hideInstructions();
         }
         else {
@@ -170,7 +170,7 @@ public class ExerciseLibraryController {
         }
 
         // demo link handling
-        if (exercise.getDemoLink().isEmpty()) {
+        if (exercise.getDemoLink() == null || exercise.getDemoLink().isEmpty()) {
             hideDemoURL();
         }
         else {
