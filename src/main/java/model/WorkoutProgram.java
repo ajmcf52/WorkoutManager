@@ -5,6 +5,7 @@ import enums.MovementType;
 import enums.PrescriptionType;
 import enums.SectionType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -19,7 +20,9 @@ public class WorkoutProgram {
     /*
     empty constructor; intended for use with Jackson
      */
-    public WorkoutProgram() {}
+    public WorkoutProgram() {
+        workoutSections = new ArrayList<>();
+    }
 
     public WorkoutProgram(String name, List<WorkoutSection> sections) {
         this.workoutSections = sections;

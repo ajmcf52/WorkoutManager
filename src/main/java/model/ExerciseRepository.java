@@ -578,6 +578,8 @@ public class ExerciseRepository {
     }
 
     /*
+    DEPRECATED.
+
     writes the list of exercises to the JSON file.
     to append a newly created exercise, this is the
     cleanest way to avoid clumsy and brittle code.
