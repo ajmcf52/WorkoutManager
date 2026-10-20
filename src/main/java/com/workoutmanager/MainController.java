@@ -13,6 +13,7 @@ import model.WorkoutProgram;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 /*
 main controller of the application.
@@ -29,6 +30,8 @@ public class MainController {
 
     private ObservableList<Exercise> allExercises;
     private ObservableList<WorkoutProgram> allPrograms;
+
+    private HashMap<Integer, Exercise> exerciseById;
 
     @FXML
     private ExerciseLibraryController exerciseLibraryController;
@@ -51,17 +54,28 @@ public class MainController {
         try (Connection connection = DatabaseConnection.openConnection()) {
             allExercises = FXCollections.
                     observableList(exerciseRepository.loadAllFromDatabase(connection));
-
-            //exerciseRepository.cleanUpOrphanedRows(connection);
-
         } catch (SQLException e) {
             System.err.println("Error loading exercises from JDBC. Exiting now.");
             throw new RuntimeException(e);
         }
 
+        // step 1b -- build the exercise HashMap
+
+        exerciseById = new HashMap<Integer, Exercise>();
+        for (Exercise exercise : allExercises) {
+            exerciseById.put(exercise.getExerciseId(), exercise);
+        }
+
         programRepository = new ProgramRepository();
-        allPrograms = FXCollections.
-                observableList(programRepository.loadAll());
+        try (Connection connection = DatabaseConnection.openConnection()) {
+            allPrograms = FXCollections.
+                    observableList(programRepository.loadAllWorkoutPrograms(connection, exerciseById));
+        }
+        catch (SQLException e) {
+            System.err.println("Error loading WorkoutPrograms from JDBC. Exiting now.");
+            System.err.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
 
         // step 2 -- inject data into appropriate controllers
         exerciseLibraryController.setExerciseList(allExercises);

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import database.DatabaseConnection;
+import enums.DurationUnit;
+import enums.Intensity;
 import enums.SectionType;
 import javafx.collections.FXCollections;
 
@@ -235,7 +237,95 @@ public class ProgramRepository {
         }
     }
 
-    public List<WorkoutProgram> loadAllWorkoutPrograms(Connection connection) throws SQLException {
+    /**
+     *
+     * @param connection Db connection
+     * @param workoutSectionId IDs a unique workout section
+     * @param sectionType (ie, WARM_UP)
+     * @return new WorkoutSection with ProgramExercises attached.
+     * @throws SQLException caught by higher order fn calls
+     */
+    public WorkoutSection loadWorkoutSection(Connection connection,
+                                             int workoutSectionId,
+                                             SectionType sectionType,
+                                             HashMap<Integer, Exercise> exerciseMap) throws SQLException {
+        WorkoutSection workoutSection = new WorkoutSection();
+
+        workoutSection.setSectionType(sectionType);
+
+        String programExercisesSql = """
+                SELECT *
+                FROM ProgramExercise
+                WHERE workout_section_id=?
+                """;
+
+        List<ProgramExercise> programExercises = new ArrayList<ProgramExercise>();
+
+        try (PreparedStatement programExQuery = connection.prepareStatement
+                (programExercisesSql)) {
+            programExQuery.setInt(1, workoutSectionId);
+            try (ResultSet prExResults = programExQuery.executeQuery()) {
+
+                // each result represents a ProgramExercise.
+                while (prExResults.next()) {
+
+                    ProgramExercise programExercise = new ProgramExercise();
+
+                    programExercise.setProgramExerciseId(
+                            prExResults.getInt("program_exercise_id")
+                    );
+
+                    Integer exerciseId = prExResults.getInt("exercise_id");
+                    Exercise exercise = exerciseMap.get(exerciseId);
+                    if (exercise == null) {
+                        throw new IllegalStateException("exercise ID ot a "
+                                + exerciseId + " found to be null. Exiting now.");
+                    }
+                    programExercise.setExercise(exercise);
+
+                    int minSets = prExResults.getInt("min_sets");
+                    programExercise.setMinSets(prExResults.wasNull() ? null : minSets);
+
+                    int maxSets = prExResults.getInt("max_sets");
+                    programExercise.setMaxSets(prExResults.wasNull() ? null : maxSets);
+
+                    int minReps = prExResults.getInt("min_reps");
+                    programExercise.setMinReps(prExResults.wasNull() ? null : minReps);
+
+                    int maxReps = prExResults.getInt("max_reps");
+                    programExercise.setMaxReps(prExResults.wasNull() ? null : maxReps);
+
+                    int durationValue = prExResults.getInt("duration_value");
+                    programExercise.setDuration(prExResults.wasNull() ? null : durationValue);
+
+                    // small null check for duration type Enum
+                    String durationUnitString = prExResults.getString("duration_unit");
+                    programExercise.setDurationUnit(
+                    durationUnitString == null ? null : DurationUnit.valueOf(durationUnitString));
+
+                    programExercise.setIntensity(
+                            Intensity.valueOf(
+                                    prExResults.getString("intensity")
+                            )
+                    );
+
+                    programExercise.setNotes(
+                            prExResults.getString("notes")
+                    );
+
+                    // add newly created ProgramExercise
+                    programExercises.add(programExercise);
+                }
+            }
+        }
+        workoutSection.setExercises(programExercises);
+
+        return workoutSection;
+    }
+
+    public List<WorkoutProgram> loadAllWorkoutPrograms(
+            Connection connection, HashMap<Integer, Exercise> exerciseById) throws SQLException {
+
         List<WorkoutProgram> workoutPrograms = new ArrayList<>();
 
         /*
@@ -250,21 +340,30 @@ public class ProgramRepository {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(workoutProgramSql)) {
                 while (results.next()) {
+
                     WorkoutProgram workoutProgram = new WorkoutProgram();
+
+                    int workoutId = results.getInt("workout_id");
+                    workoutProgram.setWorkoutProgramId(workoutId);
+
                     workoutProgram.setProgramName(
                             results.getString("program_name"));
-                    int workoutId = results.getInt("workout_id");
 
                     /*
-                    with a workout ID, we can query workout
-                    sections and rebuild them with their
-                    programmed exercises, one section at a time.
+                    getting workout section IDs and
+                    section type names in one go.
                      */
                     String sectionSql = """
-                            SELECT *
-                            FROM WorkoutSection
+                            SELECT ws.*, st.name as section_type_name
+                            FROM WorkoutSection ws
+                            JOIN SectionType st
+                            ON ws.section_type_id=st.section_type_id
                             WHERE workout_id=?
+                            ORDER BY section_type_id
                             """;
+
+                    List<WorkoutSection> workoutSections = new ArrayList<WorkoutSection>();
+
                     try (PreparedStatement sectionQuery =
                                  connection.prepareStatement(sectionSql)) {
                         sectionQuery.setInt(1, workoutId);
@@ -275,67 +374,29 @@ public class ProgramRepository {
                                 we can get the ProgramExercises
                                 and reconstruct.
                                  */
-
-                                WorkoutSection section = new WorkoutSection();
                                 int workoutSectionId = sectionResults.getInt(
                                         "workout_section_id"
                                 );
-
-                                /*
-                                identifying the section type.
-                                 */
-                                int sectionTypeId = sectionResults.getInt(
-                                        "section_type_id"
+                                SectionType sectionType = SectionType.valueOf(
+                                        sectionResults.getString("section_type_name")
                                 );
-                                String sectionTypeSql = """
-                                        SELECT name
-                                        FROM SectionType
-                                        WHERE section_type_id=?
-                                        """;
-                                try (PreparedStatement sectionTypeQuery =
-                                             connection.prepareStatement(sectionTypeSql)) {
-                                    sectionTypeQuery.setInt(1,sectionTypeId);
 
-                                    try (ResultSet sectionTypeResult = sectionTypeQuery.executeQuery()) {
-                                        if (sectionTypeResult.next()) {
-                                            section.setSectionType(SectionType.valueOf(
-                                                    sectionTypeResult.getString("name")
-                                            ));
-                                        }
-                                    }
-                                }
+                                WorkoutSection workoutSection = loadWorkoutSection(
+                                        connection,
+                                        workoutSectionId,
+                                        sectionType,
+                                        exerciseById
+                                );
 
-                                /*
-                                identifying the program exercises that
-                                go along with this workout section.
-                                 */
-                                String programExercisesSql = """
-                                        SELECT *
-                                        FROM ProgramExercise
-                                        WHERE workout_section_id=?
-                                        """;
-
-                                try (PreparedStatement programExQuery = connection.prepareStatement
-                                        (programExercisesSql)) {
-                                    programExQuery.setInt(1,workoutSectionId);
-                                    try (ResultSet prExResults = programExQuery.executeQuery()) {
-
-                                        /*
-                                        now for each result, rebuild
-                                        a ProgramExercise object.
-                                         */
-                                        while (prExResults.next()) {
-
-                                        }
-                                    }
-                                }
+                                workoutSections.add(workoutSection);
 
                             }
                         }
                     }
+                    workoutProgram.setWorkoutSections(workoutSections);
+                    workoutPrograms.add(workoutProgram);
                 }
             }
-
         }
 
         return workoutPrograms;

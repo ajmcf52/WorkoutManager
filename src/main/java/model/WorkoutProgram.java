@@ -14,6 +14,7 @@ that users may build and follow at the gym.
  */
 public class WorkoutProgram {
 
+    private Integer workoutProgramId;
     private String programName;
     private List<WorkoutSection> workoutSections;
 
@@ -29,12 +30,18 @@ public class WorkoutProgram {
         this.programName = name;
     }
 
+    public Integer getWorkoutProgramId() { return workoutProgramId; }
+
     public String getProgramName() {
         return this.programName;
     }
 
     public List<WorkoutSection> getWorkoutSections() {
         return this.workoutSections;
+    }
+
+    public void setWorkoutProgramId(Integer workoutProgramId) {
+        this.workoutProgramId = workoutProgramId;
     }
 
     public void setProgramName(String name) {

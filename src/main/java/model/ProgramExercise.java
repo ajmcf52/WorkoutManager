@@ -11,6 +11,9 @@ contains several additional fields relevant
 to a prescribed exercise (sets, reps, duration, etc.)
  */
 public class ProgramExercise {
+
+    private Integer programExerciseId;
+
     private Exercise exercise;
 
     private Integer minSets;
@@ -110,6 +113,8 @@ public class ProgramExercise {
 
     // getters and setters
 
+    public Integer getProgramExerciseId() { return programExerciseId; }
+
     public Exercise getExercise() {
         return exercise;
     }
@@ -142,6 +147,10 @@ public class ProgramExercise {
 
     public String getNotes() {
         return notes;
+    }
+
+    public void setProgramExerciseId(Integer programExerciseId) {
+        this.programExerciseId = programExerciseId;
     }
 
     public void setMinSets(Integer minSets) {
