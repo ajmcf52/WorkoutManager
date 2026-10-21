@@ -77,6 +77,135 @@ public class ProgramRepository {
         }
     }
 
+    public void saveProgramExercise(Connection connection,
+                                    ProgramExercise programExercise,
+                                    int workoutSectionId) throws  SQLException {
+        String sql = """
+                INSERT INTO ProgramExercise(workout_section_id, exercise_id,
+                min_sets, max_sets, min_reps, max_reps, duration_value,
+                duration_unit, intensity, notes)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, workoutSectionId);
+
+            int exerciseId = programExercise.getExercise().getExerciseId();
+            statement.setInt(2, exerciseId);
+
+            Integer minSets = programExercise.getMinSets();
+            Integer maxSets = programExercise.getMaxSets();
+            if (minSets == null) {
+                statement.setNull(3, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
+            }
+            else {
+                statement.setInt(3, minSets);
+                statement.setInt(4, maxSets);
+            }
+
+            Integer minReps = programExercise.getMinReps();
+            Integer maxReps = programExercise.getMaxReps();
+            if (minReps == null) {
+                statement.setNull(5, Types.INTEGER);
+                statement.setNull(6, Types.INTEGER);
+            }
+            else {
+                statement.setInt(5, minReps);
+                statement.setInt(6, maxReps);
+            }
+
+            Integer durationValue = programExercise.getDuration();
+            if (durationValue == null) {
+                statement.setNull(7, Types.INTEGER);
+                statement.setNull(8, Types.VARCHAR);
+            }
+            else {
+                String durationUnit = programExercise.getDurationUnit().name();
+                statement.setInt(7, durationValue);
+                statement.setString(8, durationUnit);
+            }
+
+            statement.setString(9,
+                    programExercise.getIntensity().name());
+
+            String notes = programExercise.getNotes();
+            if (notes == null || notes.isBlank()) {
+                statement.setNull(10, Types.VARCHAR);
+            }
+            else {
+                statement.setString(10, notes);
+            }
+
+            // fields set; time to insert.
+            statement.executeUpdate();
+        }
+
+    }
+
+    public void saveWorkoutSection(Connection connection, WorkoutSection section, int programId) throws SQLException {
+        int workoutSectionId = 0;
+        String sql = """
+                INSERT INTO WorkoutSection(workout_id, section_type_id)
+                VALUES(?, (
+                SELECT st.section_type_id
+                FROM SectionType st
+                WHERE st.name=?))
+                """;
+        try (PreparedStatement statement = connection.prepareStatement
+                (sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.setInt(1, programId);
+            statement.setString(2, section.getSectionType().name());
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new SQLException("No generated key for WorkoutSection. Program failure.");
+                }
+                workoutSectionId = keys.getInt(1);
+            }
+        }
+
+        for (ProgramExercise prExercise : section.getExercises()) {
+            saveProgramExercise(connection, prExercise, workoutSectionId);
+        }
+    }
+
+    /**
+     * CRUD operation used to save a WorkoutProgram object to JDBC
+     * @param connection DB connection
+     * @param program the workout program
+     * @throws SQLException in case of bad DB operation(s)
+     */
+    public int saveWorkoutProgram(Connection connection, WorkoutProgram program) throws SQLException {
+        int programId = 0;
+        String sql = """
+                INSERT INTO WorkoutProgram(program_name)
+                VALUES(?)
+                """;
+        try (PreparedStatement statement = connection.prepareStatement
+                (sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.setString(1, program.getProgramName());
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new SQLException("No generated key for WorkoutProgram. Exiting.");
+                }
+                programId = keys.getInt(1);
+            }
+        }
+
+        // WorkoutProgram inserted; now onto WorkoutSections.
+        for (WorkoutSection section: program.getWorkoutSections()) {
+            saveWorkoutSection(connection, section, programId);
+        }
+
+
+        return programId;
+    }
+
     /*
     one-time function used for mapping
     JSON to JDBC WorkoutProgram entities.

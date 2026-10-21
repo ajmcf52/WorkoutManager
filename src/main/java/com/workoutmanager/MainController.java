@@ -88,20 +88,31 @@ public class MainController {
         exerciseLibraryController.setOnExerciseCreated(exercise -> {
 
             try (Connection connection = DatabaseConnection.openConnection()) {
-                int exerciseId = exerciseRepository.save(exercise, connection);
 
-                exerciseRepository.saveSuitableSections(exerciseId, exercise, connection);
-                exerciseRepository.saveEquipment(exerciseId, exercise, connection);
-                exerciseRepository.saveMuscleGroups(exerciseId, exercise, connection);
+                connection.setAutoCommit(false);
+                try {
+                    int exerciseId = exerciseRepository.save(exercise, connection);
 
-                exercise.setExerciseId(exerciseId);
+                    exerciseRepository.saveSuitableSections(exerciseId, exercise, connection);
+                    exerciseRepository.saveEquipment(exerciseId, exercise, connection);
+                    exerciseRepository.saveMuscleGroups(exerciseId, exercise, connection);
+                    connection.commit();
+
+                    exercise.setExerciseId(exerciseId);
+                    allExercises.add(exercise);
+
+
+                } catch (SQLException e) {
+                    connection.rollback();
+                    System.err.println("Exercise failed to write (JDBC). Exiting now.");
+                    throw new RuntimeException(e);
+                }
             }
             catch (SQLException e) {
-                System.err.println("Exercise failed to write (JDBC). Exiting now.");
                 throw new RuntimeException(e);
             }
 
-            allExercises.add(exercise);
+
         });
 
         // exercise deletion callback (JDBC)
@@ -120,8 +131,26 @@ public class MainController {
 
         // new workout program CB
         programLibraryController.setOnProgramCreated(program -> {
-            allPrograms.add(program);
-            programRepository.saveAll(allPrograms);
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                connection.setAutoCommit(false);
+
+                try {
+                    int workoutProgramId = programRepository.saveWorkoutProgram(
+                            connection, program);
+                    connection.commit();
+                    program.setWorkoutProgramId(workoutProgramId);
+                    allPrograms.add(program);
+                }
+                catch (SQLException e) {
+                    connection.rollback();
+                    System.err.println("Failed to write WorkoutProgram to JDBC. Rolling back.");
+                    throw new RuntimeException(e);
+                }
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         // program deletion CB
