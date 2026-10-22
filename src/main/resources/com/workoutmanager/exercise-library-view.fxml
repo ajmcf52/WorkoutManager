@@ -39,8 +39,13 @@
 
         <Button text="Add an exercise.."
                 styleClass="filter-control"
-                onAction="#createNewExerciseWindow"
+                onAction="#createExercise"
                 textAlignment="CENTER"/>
+
+        <Button text="Modify.."
+                styleClass="filter-control"
+                onAction="#modifyExercise"
+                textAlignment="CENTER" />
 
         <Button text="Delete exercise"
                 styleClass="filter-control"

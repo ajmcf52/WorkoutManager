@@ -9,6 +9,7 @@ import model.Exercise;
 import model.ExerciseRepository;
 import model.ProgramRepository;
 import model.WorkoutProgram;
+import org.sqlite.core.DB;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -111,14 +112,14 @@ public class MainController {
             catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        });
 
-
+        exerciseLibraryController.setOnExerciseModified((exercise, modified) -> {
+            //TODO implement this function.
         });
 
         // exercise deletion callback (JDBC)
         exerciseLibraryController.setOnExerciseDeleted(exercise -> {
-
-            allExercises.remove(exercise);
 
             try (Connection connection = DatabaseConnection.openConnection()) {
                     exerciseRepository.delete(exercise,connection);
@@ -127,6 +128,9 @@ public class MainController {
                 System.err.println("Exercise deletion failed in JDBC. Exiting.");
                 throw new RuntimeException(e);
             }
+
+            allExercises.remove(exercise);
+
         });
 
         // new workout program CB
@@ -155,8 +159,16 @@ public class MainController {
 
         // program deletion CB
         programLibraryController.setOnProgramDeleted(program -> {
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                programRepository.delete(connection, program.getWorkoutProgramId());
+            }
+            catch (SQLException e) {
+                System.err.println("Program " + program.getProgramName() + " failed; exiting.");
+                throw new RuntimeException(e);
+            }
+
             allPrograms.remove(program);
-            programRepository.saveAll(allPrograms);
         });
     }
 }

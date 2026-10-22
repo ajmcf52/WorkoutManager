@@ -1,6 +1,5 @@
 package com.workoutmanager;
 
-import com.dlsc.formsfx.model.structure.Section;
 import enums.*;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -10,19 +9,18 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import model.Exercise;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 
 /*
 form used for creating a new exercise and adding it to
 the program's persistent memory in JSON.
  */
-public class NewExerciseController {
+public class ExerciseController {
 
-    private Exercise savedExercise;
+    private Exercise modified;
+
+    private Exercise exercise;
 
     @FXML
     private TextField exerciseName;
@@ -60,8 +58,42 @@ public class NewExerciseController {
     @FXML
     private Button cancelButton;
 
+    public Exercise getModified() { return modified; }
+
     public Exercise getExercise() {
-        return savedExercise;
+        return exercise;
+    }
+
+    /*
+    only called by Update CRUD operation
+     */
+    public void setExercise(Exercise exercise) {
+        this.exercise = exercise;
+
+        //pre-populate fields according to this exercise.
+
+        exerciseName.setText(exercise.getName());
+
+        difficultySelection.getSelectionModel().select(exercise.getDifficulty());
+
+        equipmentSelection.getSelectionModel().select(exercise.getEquipment());
+
+        prescriptionTypeSelection.getSelectionModel()
+                .select(exercise.getPrescriptionType());
+
+        movementTypeSelection.getSelectionModel().select(exercise.getMovementType());
+
+        for (SectionType sectionType : exercise.getSuitableSections()) {
+            suitableSectionSelection.getSelectionModel().select(sectionType);
+        }
+
+        for (MuscleGroup muscleGroup : exercise.getMuscleGroups()) {
+            muscleGroupSelection.getSelectionModel().select(muscleGroup);
+        }
+
+        exerciseDemoUrl.setText(exercise.getDemoLink());
+
+        exerciseInstructions.setText(exercise.getInstructions());
     }
 
     @FXML
@@ -140,92 +172,151 @@ public class NewExerciseController {
     }
 
     /*
+    validation helper; used by both creation
+    and modification workflows.
+     */
+    @FXML
+    private boolean validateInputs() {
+
+        if (exerciseName.getText().isBlank()) {
+            triggerErrorMessage("Please provide an exercise name.");
+            return false;
+        }
+
+        if (difficultySelection.getValue() == null) {
+            triggerErrorMessage("Please select an exercise difficulty level.");
+            return false;
+        }
+
+        if (prescriptionTypeSelection.getValue() == null) {
+            triggerErrorMessage("Please select a prescription type.");
+            return false;
+        }
+
+        if (movementTypeSelection.getValue() == null) {
+            triggerErrorMessage("Please select a movement type.");
+            return false;
+        }
+
+        if (suitableSectionSelection.getSelectionModel().getSelectedItems().isEmpty()) {
+            triggerErrorMessage("Please select one or more suitable workout sections.");
+            return false;
+        }
+
+        if (equipmentSelection.getValue() == null) {
+            triggerErrorMessage("Please select exercise equipment.");
+            return false;
+        }
+
+        // if MovementType is Cardio, muscle group selection is nullified.
+        if (muscleGroupSelection.getSelectionModel().getSelectedItems().isEmpty()
+                && movementTypeSelection.getValue() != MovementType.CARDIO) {
+            triggerErrorMessage("Please set one or more muscle groups.");
+            return false;
+        }
+        // demo link optional; if input supplied, we validate the URL.
+        if (!exerciseDemoUrl.getText().isEmpty()) {
+            boolean isLinkValid = validateURL(exerciseDemoUrl.getText());
+
+            if (!isLinkValid) {
+                triggerErrorMessage("Please provide a valid demo URL, or no URL at all.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+    saves exercise modifications, passing them
+    back to the LibraryController.
+     */
+    @FXML
+    private void saveExerciseModification() {
+
+        modified = new Exercise();
+        modified.setExerciseId(exercise.getExerciseId());
+        /*
+        for now, we will not bother to track
+        Exercise state, and will assume that
+        the user has changed something.
+         */
+        modified.setName(exerciseName.getText());
+
+        modified.setDifficulty(difficultySelection.getValue());
+
+        modified.setEquipment(equipmentSelection.getValue());
+
+        modified.setPrescriptionType(prescriptionTypeSelection.getValue());
+
+        modified.setMovementType(movementTypeSelection.getValue());
+
+        EnumSet<SectionType> sectionTypes = EnumSet.copyOf(suitableSectionSelection
+                .getSelectionModel().getSelectedItems());
+        modified.setSuitableSections(sectionTypes);
+
+        EnumSet<MuscleGroup> muscleGroups = EnumSet.copyOf(muscleGroupSelection
+                .getSelectionModel().getSelectedItems());
+        modified.setMuscleGroups(muscleGroups);
+
+        modified.setDemoLink(exerciseDemoUrl.getText());
+
+        modified.setInstructions(exerciseInstructions.getText());
+
+        closeWindow();
+    }
+
+    /*
     take values from the form, validate,
     create new Exercise object, and pass it to ExerciseLibraryController.
      */
     @FXML
     private void saveExerciseCreation() {
+
+        if (!validateInputs()) {
+            return;
+        }
+
         /*
-        values we're collecting:
-        -exercise name (no special characters or numbers--letters only)
-        -difficulty
-        -equipment
-        -muscle groups
-        prescription type
-        -demo link URL
-        -instructions
+        if exercise is not null, it's already
+        been passed in and is being modified.
          */
-
-        String name = exerciseName.getText();
-
-        //acquiring form values and validating
-        if (name.isBlank()) {
-            triggerErrorMessage("Please provide an exercise name.");
-            return;
+        if (exercise != null) {
+            saveExerciseModification();
         }
 
-        Difficulty difficulty = difficultySelection.getValue();
-        if (difficulty == null) {
-            triggerErrorMessage("Please select an exercise difficulty level.");
-            return;
+        else {
+
+            //acquiring form values
+            String name = exerciseName.getText();
+
+            Difficulty difficulty = difficultySelection.getValue();
+
+            PrescriptionType prescriptionType = prescriptionTypeSelection.getValue();
+
+            MovementType movementType = movementTypeSelection.getValue();
+
+            ObservableList<SectionType> selectedSectionTypes = suitableSectionSelection.selectionModelProperty()
+                    .getValue().getSelectedItems();
+            EnumSet<SectionType> sectionTypes = EnumSet.copyOf(selectedSectionTypes);
+
+            Equipment equipment = equipmentSelection.getValue();
+
+            ObservableList<MuscleGroup> selectedMuscleGroups = muscleGroupSelection.
+                    selectionModelProperty().getValue().getSelectedItems();
+            EnumSet<MuscleGroup> muscleGroups = movementType == MovementType.CARDIO ?
+                    null : EnumSet.copyOf(selectedMuscleGroups);
+
+            String demoLink = exerciseDemoUrl.getText();
+
+            String instructions = exerciseInstructions.getText();
+
+            exercise = new Exercise(name, demoLink, instructions,
+                    muscleGroups, difficulty, equipment, prescriptionType,
+                    movementType, sectionTypes);
+
+            closeWindow();
         }
-
-        PrescriptionType prescriptionType = prescriptionTypeSelection.getValue();
-        if (prescriptionType == null) {
-            triggerErrorMessage("Please select a prescription type.");
-            return;
-        }
-
-        MovementType movementType = movementTypeSelection.getValue();
-        if (movementType == null) {
-            triggerErrorMessage("Please select a movement type.");
-            return;
-        }
-
-        ObservableList<SectionType> selectedSectionTypes = suitableSectionSelection.selectionModelProperty()
-                .getValue().getSelectedItems();
-
-        if (selectedSectionTypes.isEmpty()) {
-            triggerErrorMessage("Please select one or more suitable workout sections.");
-            return;
-        }
-        EnumSet<SectionType> sectionTypes = EnumSet.copyOf(selectedSectionTypes);
-
-        Equipment equipment = equipmentSelection.getValue();
-        if (equipment == null) {
-            triggerErrorMessage("Please select exercise equipment.");
-            return;
-        }
-        ObservableList<MuscleGroup> selectedMuscleGroups = muscleGroupSelection.
-                selectionModelProperty().getValue().getSelectedItems();
-
-        // if MovementType is Cardio, muscle group selection is nullified.
-        if (selectedMuscleGroups.isEmpty() && movementType != MovementType.CARDIO) {
-            triggerErrorMessage("Please set one or more muscle groups.");
-            return;
-        }
-        EnumSet<MuscleGroup> muscleGroups = movementType == MovementType.CARDIO ?
-                null : EnumSet.copyOf(selectedMuscleGroups);
-
-        // demo link optional; if input supplied, we validate the URL.
-        String demoLink = exerciseDemoUrl.getText();
-        if (!demoLink.isEmpty()) {
-            boolean isLinkValid = validateURL(demoLink);
-
-            if (!isLinkValid) {
-                triggerErrorMessage("Please provide a valid demo URL, or no URL at all.");
-                return;
-            }
-        }
-
-        // instructions optional; no validation
-        String instructions = exerciseInstructions.getText();
-
-        savedExercise = new Exercise(name,demoLink,instructions,
-                muscleGroups,difficulty,equipment,prescriptionType,
-                movementType, sectionTypes);
-
-        closeWindow();
     }
 
     /*

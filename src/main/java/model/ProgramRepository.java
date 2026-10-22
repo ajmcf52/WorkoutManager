@@ -367,6 +367,24 @@ public class ProgramRepository {
     }
 
     /**
+     * CRUD operation -- used to delete a workout
+     * @param connection DB connection
+     * @param workoutProgramId IDs a workout program
+     * @throws SQLException in case of JDBC error
+     */
+    public void delete(Connection connection, int workoutProgramId) throws SQLException {
+
+        String sql = """
+                DELETE FROM WorkoutProgram
+                WHERE workout_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, workoutProgramId);
+            statement.executeUpdate();
+        }
+    }
+
+    /**
      *
      * @param connection Db connection
      * @param workoutSectionId IDs a unique workout section

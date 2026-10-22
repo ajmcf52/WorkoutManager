@@ -19,6 +19,7 @@ import model.Exercise;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -77,6 +78,8 @@ public class ExerciseLibraryController {
 
     private Consumer<Exercise> onExerciseDeleted;
 
+    private BiConsumer<Exercise, Exercise> onExerciseModified;
+
     /*
     public setter. allows Main controller to inject all exercise data.
      */
@@ -93,7 +96,11 @@ public class ExerciseLibraryController {
         this.onExerciseCreated = callback;
     }
 
+    // deletion callback
     public void setOnExerciseDeleted(Consumer<Exercise> callback) { this.onExerciseDeleted = callback; }
+
+    //update callback
+    public void setOnExerciseModified(BiConsumer<Exercise, Exercise> callback) { this.onExerciseModified = callback; }
 
     /*
     enum format helper function.
@@ -208,13 +215,24 @@ public class ExerciseLibraryController {
         }
     }
 
+    @FXML
+    private void createExercise() {
+        createExerciseBuilderWindow(null);
+    }
+
+    @FXML
+    private void modifyExercise() {
+        Exercise exercise = exerciseTable.getSelectionModel().getSelectedItem();
+        createExerciseBuilderWindow(exercise);
+    }
+
     /*
     secondary window creation that occurs when
     a user wishes to create a new exercise.
      */
     @FXML
-    private void createNewExerciseWindow() {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/workoutmanager/new-exercise-view.fxml"));
+    private void createExerciseBuilderWindow(Exercise exerciseToModify) {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/workoutmanager/exercise-builder-view.fxml"));
         Scene scene;
         try {
             scene = new Scene(loader.load());
@@ -226,17 +244,33 @@ public class ExerciseLibraryController {
         stage.setScene(scene);
         stage.initModality(Modality.APPLICATION_MODAL);
 
+        ExerciseController controller = loader.getController();
+
+        if (exerciseToModify != null) {
+            controller.setExercise(exerciseToModify);
+        }
+
         //wait for secondary window to do its work
         stage.showAndWait();
 
-        NewExerciseController controller = loader.getController();
-        Exercise newExercise = controller.getExercise();
-        if (newExercise == null) {
-            return;
+        Exercise modified = controller.getModified();
+        Exercise exercise = controller.getExercise();
+
+        // for modifications
+        if (modified != null) {
+            onExerciseModified.accept(exercise, modified);
         }
 
-        //make the callback to MainController
-        onExerciseCreated.accept(newExercise);
+        // for exercise creation
+        else {
+
+            if (exercise == null) {
+                return;
+            }
+
+            //make the callback to MainController
+            onExerciseCreated.accept(exercise);
+        }
     }
 
     //hides details when nothing is selected.
