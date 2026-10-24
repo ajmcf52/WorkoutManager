@@ -93,13 +93,14 @@ public class MainController {
                 connection.setAutoCommit(false);
                 try {
                     int exerciseId = exerciseRepository.save(exercise, connection);
+                    exercise.setExerciseId(exerciseId);
 
-                    exerciseRepository.saveSuitableSections(exerciseId, exercise, connection);
-                    exerciseRepository.saveEquipment(exerciseId, exercise, connection);
-                    exerciseRepository.saveMuscleGroups(exerciseId, exercise, connection);
+                    exerciseRepository.saveSuitableSections(exercise, connection);
+                    exerciseRepository.saveEquipment(exercise, connection);
+                    exerciseRepository.saveMuscleGroups(exercise, connection);
+
                     connection.commit();
 
-                    exercise.setExerciseId(exerciseId);
                     allExercises.add(exercise);
 
 
@@ -115,7 +116,32 @@ public class MainController {
         });
 
         exerciseLibraryController.setOnExerciseModified((exercise, modified) -> {
-            //TODO implement this function.
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                connection.setAutoCommit(false);
+
+                try {
+                    int index = allExercises.indexOf(exercise);
+                    if (index < 0) {
+                        throw new IllegalStateException(
+                                "Exercise " + exercise.getExerciseId() +
+                                " not found in master list.");
+                    }
+                    exerciseRepository.update(modified, connection);
+                    connection.commit();
+
+                    allExercises.set(index, modified);
+                }
+                catch (SQLException e) {
+                    connection.rollback();
+                    System.err.println("UPDATE exercise " + exercise.getExerciseId() +
+                            " failed; rolling back.");
+                    throw new RuntimeException(e);
+                }
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         // exercise deletion callback (JDBC)

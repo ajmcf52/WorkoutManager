@@ -215,6 +215,89 @@ public class ExerciseRepository {
     }
 
     /*
+    CRUD function--updates the exercise by ID
+    with the given fields.
+     */
+    public void update(Exercise exercise, Connection connection) throws SQLException {
+        String sql = """
+                UPDATE Exercise
+                SET name=?, demo_url=?, instructions=?, difficulty=?,
+                movement_type=?, prescription_type=?
+                WHERE exercise_id=?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, exercise.getName());
+
+            if (exercise.getDemoLink() == null || exercise.getDemoLink().isBlank()) {
+                statement.setNull(2, Types.VARCHAR);
+            }
+            else {
+                statement.setString(2, exercise.getDemoLink());
+            }
+
+            if (exercise.getInstructions() == null || exercise.getInstructions().isBlank()) {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            else {
+                statement.setString(3, exercise.getInstructions());
+            }
+
+            statement.setString(4, exercise.getDifficulty().name());
+            statement.setString(5, exercise.getMovementType().name());
+            statement.setString(6, exercise.getPrescriptionType().name());
+
+            statement.setInt(7, exercise.getExerciseId());
+
+            int rowsAffected = statement.executeUpdate();
+            if (rowsAffected != 1) {
+                throw new SQLException("Exercise object not found in JDBC.");
+            }
+        }
+
+        /*
+        update junction table rows;
+        delete first then reinsert.
+         */
+        deleteJunctionRows(exercise, connection);
+        saveEquipment(exercise, connection);
+        saveMuscleGroups(exercise,connection);
+        saveSuitableSections(exercise, connection);
+    }
+
+    /*
+    helper for UPDATE.
+     */
+    private void deleteJunctionRows(Exercise exercise, Connection connection) throws SQLException {
+        String sqlEq = """
+                DELETE FROM ExerciseEquipment
+                WHERE exercise_id=?
+                """;
+        String sqlMg = """
+                DELETE FROM ExerciseMuscleGroup
+                WHERE exercise_id=?
+                """;
+        String sqlSs = """
+                DELETE FROM SuitableSections
+                WHERE exercise_id=?
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sqlEq)) {
+            statement.setInt(1, exercise.getExerciseId());
+            statement.executeUpdate();
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement(sqlMg)) {
+            statement.setInt(1, exercise.getExerciseId());
+            statement.executeUpdate();
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement(sqlSs)) {
+            statement.setInt(1, exercise.getExerciseId());
+            statement.executeUpdate();
+        }
+    }
+
+    /*
     method used to write Exercise rows into the database.
      */
     public int save(Exercise exercise, Connection connection) throws SQLException {
@@ -265,7 +348,7 @@ public class ExerciseRepository {
     writes junction table entries according to a specific
     exercise that has just been written and saved.
      */
-    public void saveMuscleGroups(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+    public void saveMuscleGroups(Exercise exercise, Connection connection) throws SQLException {
 
         /*      some exercises (like Treadmill Walk) don't target any
                 specific muscle(s), hence we will have no junction rows.
@@ -283,7 +366,7 @@ public class ExerciseRepository {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
 
             for (MuscleGroup muscleGroup : exercise.getMuscleGroups()) {
-                statement.setInt(1, exerciseId);
+                statement.setInt(1, exercise.getExerciseId());
                 statement.setString(2, muscleGroup.name());
                 statement.executeUpdate();
             }
@@ -294,7 +377,7 @@ public class ExerciseRepository {
     save junction entry for equipment
     according to an exercise.
      */
-    public void saveEquipment(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+    public void saveEquipment(Exercise exercise, Connection connection) throws SQLException {
 
         String sql = """
                 INSERT INTO ExerciseEquipment(exercise_id, equipment_id)
@@ -302,7 +385,7 @@ public class ExerciseRepository {
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, exerciseId);
+            statement.setInt(1, exercise.getExerciseId());
             statement.setString(2, exercise.getEquipment().name());
             statement.executeUpdate();
         }
@@ -312,7 +395,7 @@ public class ExerciseRepository {
     write junction table entries for suitable sections
     according to a given exercise.
      */
-    public void saveSuitableSections(int exerciseId, Exercise exercise, Connection connection) throws SQLException {
+    public void saveSuitableSections(Exercise exercise, Connection connection) throws SQLException {
 
         String sql = """
                 INSERT INTO SuitableSections(exercise_id, section_type_id)
@@ -321,7 +404,7 @@ public class ExerciseRepository {
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (SectionType sectionType : exercise.getSuitableSections()) {
-                statement.setInt(1, exerciseId);
+                statement.setInt(1, exercise.getExerciseId());
                 statement.setString(2, sectionType.name());
                 statement.executeUpdate();
             }
@@ -346,9 +429,9 @@ public class ExerciseRepository {
             try {
                 for (Exercise exercise : exerciseList) {
                     int exerciseId = save(exercise, connection);
-                    saveMuscleGroups(exerciseId, exercise, connection);
-                    saveEquipment(exerciseId, exercise, connection);
-                    saveSuitableSections(exerciseId, exercise, connection);
+                    saveMuscleGroups(exercise, connection);
+                    saveEquipment(exercise, connection);
+                    saveSuitableSections(exercise, connection);
                 }
                 connection.commit();
             }
