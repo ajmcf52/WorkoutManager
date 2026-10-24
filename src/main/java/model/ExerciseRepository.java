@@ -8,6 +8,7 @@ import database.DatabaseConnection;
 import database.DatabaseInitializer;
 import enums.*;
 
+import javax.xml.transform.Result;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -195,6 +196,89 @@ public class ExerciseRepository {
                 }
             }
         }
+    }
+
+    /*
+    Dynamic query builder for multi-predicate JDBC search filtering.
+
+    We add SQL fragments in order, adding param values in the same order.
+
+    eg:
+    ["e.name LIKE ?", "e.difficulty = ?"]
+    ["%barbell%", "INTERMEDIATE"]
+
+    this allows us to construct the full query properly, starting with
+    WHERE and joined by AND between query fragments.
+
+    predicates beginning with NULL/"All" are simply omitted.
+
+    LEFT JOINs are used to preserve Exercise rows that have no active
+    muscle groups, such as cardio exercises (eg, Treadmill Walk).
+
+     */
+    public List<Integer> filterExercises(ExerciseFilter filter, Connection connection)
+            throws SQLException {
+        List<Integer> exerciseIds = new ArrayList<>();
+
+        String sql = """
+                SELECT DISTINCT e.exercise_id
+                FROM Exercise e
+                JOIN ExerciseEquipment ee
+                ON e.exercise_id = ee.exercise_id
+                LEFT JOIN ExerciseMuscleGroup emg
+                ON e.exercise_id = emg.exercise_id
+                JOIN Equipment eq
+                ON ee.equipment_id=eq.equipment_id
+                LEFT JOIN MuscleGroup mg
+                ON emg.muscle_group_id=mg.muscle_group_id
+                
+                """;
+
+        String searchText = filter.getSearchText();
+        Difficulty difficulty = filter.getDifficulty();
+        Equipment equipment = filter.getEquipment();
+        MuscleGroup muscleGroup = filter.getMuscleGroup();
+
+        List<String> queryConditions = new ArrayList<>();
+        List<String> paramValues = new ArrayList<>();
+
+        if (searchText != null && !searchText.isBlank()) {
+            queryConditions.add("e.name LIKE ?");
+            paramValues.add("%" + searchText + "%");
+        }
+        if (difficulty != null && difficulty != Difficulty.NULL) {
+            queryConditions.add("e.difficulty = ?");
+            paramValues.add(difficulty.name());
+        }
+        if (equipment != null && equipment != Equipment.NULL) {
+            queryConditions.add("eq.name = ?");
+            paramValues.add(equipment.name());
+        }
+        if (muscleGroup != null && muscleGroup != MuscleGroup.NULL) {
+            queryConditions.add("mg.name = ?");
+            paramValues.add(muscleGroup.name());
+        }
+        if (!queryConditions.isEmpty()) {
+            sql += "WHERE " + queryConditions.getFirst();
+        }
+        for (int i = 1; i < queryConditions.size(); i++) {
+            sql += "\nAND " + queryConditions.get(i);
+        }
+
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < paramValues.size(); i++) {
+                statement.setString(i + 1, paramValues.get(i));
+            }
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    exerciseIds.add(resultSet.getInt("exercise_id"));
+                }
+            }
+        }
+        return exerciseIds;
     }
 
     /*

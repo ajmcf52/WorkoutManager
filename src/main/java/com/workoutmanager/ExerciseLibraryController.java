@@ -4,6 +4,7 @@ import enums.Difficulty;
 import enums.Equipment;
 import enums.MovementType;
 import enums.MuscleGroup;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -16,18 +17,22 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exercise;
+import model.ExerciseFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ExerciseLibraryController {
     @FXML
     private TableView<Exercise> exerciseTable;
 
-    private FilteredList<Exercise> filteredExercises;
+    @FXML
+    private ObservableList<Exercise> displayedExercises;
 
     @FXML
     private TableColumn<Exercise, String> nameColumn;
@@ -80,12 +85,14 @@ public class ExerciseLibraryController {
 
     private BiConsumer<Exercise, Exercise> onExerciseModified;
 
+    private Function<ExerciseFilter, List<Exercise>> onFilterChanged;
+
     /*
     public setter. allows Main controller to inject all exercise data.
      */
     public void setExerciseList(ObservableList<Exercise> exercises) {
-        filteredExercises = new FilteredList<>(exercises);
-        exerciseTable.setItems(filteredExercises);
+        displayedExercises = FXCollections.observableArrayList(exercises);
+        exerciseTable.setItems(displayedExercises);
     }
 
     /*
@@ -101,6 +108,11 @@ public class ExerciseLibraryController {
 
     //update callback
     public void setOnExerciseModified(BiConsumer<Exercise, Exercise> callback) { this.onExerciseModified = callback; }
+
+    // filter change callback
+    public void setOnFilterChanged(Function<ExerciseFilter, List<Exercise>> callback) {
+        this.onFilterChanged = callback;
+    }
 
     /*
     enum format helper function.
@@ -279,8 +291,8 @@ public class ExerciseLibraryController {
     }
 
     /*
-    filters search results based on all 3 parameters: search text,
-    equipment filter and difficulty filter.
+    filters search results based on 4 parameters: search text,
+    equipment, difficulty, and muscle group selection.
      */
     private void updatePredicate() {
         String searchText = searchField.getText().toLowerCase();
@@ -288,45 +300,11 @@ public class ExerciseLibraryController {
         Difficulty difficultyValue = difficultyFilter.getValue();
         MuscleGroup muscleGroupValue = muscleGroupFilter.getValue();
 
-        filteredExercises.setPredicate(exercise -> {
-            boolean searchMatch, equipmentMatch, difficultyMatch, muscleGroupMatch;
+        ExerciseFilter exerciseFilter = new ExerciseFilter(searchText,
+                difficultyValue, equipmentValue, muscleGroupValue);
+        List<Exercise> exercisesToShow = onFilterChanged.apply(exerciseFilter);
 
-            //search text predicate
-            if (searchText.isBlank()) {
-                searchMatch = true;
-            }
-            else {
-                searchMatch = exercise.getName().toLowerCase().contains(searchText);
-            }
-
-            //equipment predicate
-            if (equipmentValue == null || equipmentValue.toString().equals("All")) {
-                equipmentMatch = true;
-            }
-            else {
-                equipmentMatch = (equipmentValue == exercise.getEquipment());
-            }
-
-            //difficulty predicate
-            if (difficultyValue == null || difficultyValue.toString().equals("All")) {
-                difficultyMatch = true;
-            }
-            else {
-                difficultyMatch = (difficultyValue == exercise.getDifficulty());
-            }
-
-            //muscle group predicate
-            if (muscleGroupValue == null || muscleGroupValue.toString().equals("All")) {
-                muscleGroupMatch = true;
-            }
-            else {
-                muscleGroupMatch = exercise.getMuscleGroups().contains(muscleGroupValue);
-            }
-
-            return searchMatch && equipmentMatch && difficultyMatch && muscleGroupMatch;
-        });
-
-        exerciseTable.setItems(filteredExercises);
+        displayedExercises.setAll(exercisesToShow);
     }
 
     private void hideMuscleGroups() {

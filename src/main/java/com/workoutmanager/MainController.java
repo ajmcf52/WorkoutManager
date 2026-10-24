@@ -14,7 +14,9 @@ import org.sqlite.core.DB;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /*
 main controller of the application.
@@ -115,6 +117,7 @@ public class MainController {
             }
         });
 
+        // exercise UPDATE callback
         exerciseLibraryController.setOnExerciseModified((exercise, modified) -> {
 
             try (Connection connection = DatabaseConnection.openConnection()) {
@@ -143,6 +146,27 @@ public class MainController {
                 throw new RuntimeException(e);
             }
         });
+
+        // exercise library search filter change callback
+        exerciseLibraryController.setOnFilterChanged(exerciseFilter -> {
+
+            try (Connection connection = DatabaseConnection.openConnection()) {
+                List<Integer> exerciseIds = exerciseRepository
+                        .filterExercises(exerciseFilter, connection);
+
+                List<Exercise> exerciseList = new ArrayList<>();
+                for (Integer exerciseId : exerciseIds) {
+                    exerciseList.add(exerciseById.get(exerciseId));
+                }
+                return exerciseList;
+        }
+            catch (SQLException e) {
+                System.err.println("Error filtering exercise library" +
+                        " search results (JDBC)");
+                throw new RuntimeException(e);
+            }
+        });
+
 
         // exercise deletion callback (JDBC)
         exerciseLibraryController.setOnExerciseDeleted(exercise -> {
