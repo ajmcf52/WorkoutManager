@@ -13,7 +13,7 @@
         <Label text="Program name: "/>
         <TextField fx:id="programNameField"/>
     </HBox>
-    <TabPane>
+    <TabPane tabClosingPolicy="UNAVAILABLE">
         <Tab text="Warm Up">
             <VBox>
 

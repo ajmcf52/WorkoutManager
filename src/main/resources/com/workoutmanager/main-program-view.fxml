@@ -9,6 +9,7 @@
 <TabPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.workoutmanager.MainController"
+         tabClosingPolicy="UNAVAILABLE"
             prefHeight="500.0" prefWidth="1000.0">
 
     <Tab text="Exercises">

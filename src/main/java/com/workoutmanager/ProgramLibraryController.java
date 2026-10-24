@@ -2,6 +2,7 @@ package com.workoutmanager;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -13,6 +14,7 @@ import model.Exercise;
 import model.WorkoutProgram;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -24,7 +26,7 @@ public class ProgramLibraryController {
     @FXML
     private ListView<WorkoutProgram> programsListView;
 
-    private ObservableList<WorkoutProgram> allWorkoutPrograms;
+    private SortedList<WorkoutProgram> allWorkoutPrograms;
 
     private ObservableList<Exercise> allExercises;
 
@@ -54,7 +56,8 @@ public class ProgramLibraryController {
     public setter for workout programs. Allows Main controller to inject program data.
      */
     public void setWorkoutPrograms(ObservableList<WorkoutProgram> allPrograms) {
-        allWorkoutPrograms = allPrograms;
+        allWorkoutPrograms = new SortedList<>(allPrograms,
+                Comparator.comparing(WorkoutProgram::getProgramName));
         programsListView.setItems(allWorkoutPrograms);
     }
 

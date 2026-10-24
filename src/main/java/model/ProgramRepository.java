@@ -29,9 +29,11 @@ utilizes the Jackson API to read/write in JSON.
  */
 public class ProgramRepository {
 
-    /*
+    /** @deprecated 1.0;
     migrate old difficulty values to new ones.
+     No longer in use.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void migrateDifficultyValues(File file) {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = null;
@@ -77,6 +79,13 @@ public class ProgramRepository {
         }
     }
 
+    /**
+     * JDBC CRUD function for saving a ProgramExercise row.
+     * @param connection JDBC connection
+     * @param programExercise row we're saving
+     * @param workoutSectionId junction table row ID
+     * @throws SQLException SQL error
+     */
     public void saveProgramExercise(Connection connection,
                                     ProgramExercise programExercise,
                                     int workoutSectionId) throws  SQLException {
@@ -144,6 +153,13 @@ public class ProgramRepository {
 
     }
 
+    /**
+     * CRUD operation for saving a WorkoutSection (ie Warmup)
+     * @param connection JDBC connection
+     * @param section the WorkoutSection we're saving
+     * @param programId parent Program ID
+     * @throws SQLException SQL Error
+     */
     public void saveWorkoutSection(Connection connection, WorkoutSection section, int programId) throws SQLException {
         int workoutSectionId = 0;
         String sql = """
@@ -206,10 +222,12 @@ public class ProgramRepository {
         return programId;
     }
 
-    /*
+    /** @deprecated 1.0;
     one-time function used for mapping
     JSON to JDBC WorkoutProgram entities.
+     No longer in use.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void migrateWorkoutPrograms() throws SQLException {
 
         List<WorkoutProgram> workoutPrograms = loadAll();
@@ -470,6 +488,13 @@ public class ProgramRepository {
         return workoutSection;
     }
 
+    /**
+     * CRUD operation for loading all workout programs.
+     * @param connection JDBC connection
+     * @param exerciseById ID-Exercise map.
+     * @return List of all WorkoutProgram objects in JDBC
+     * @throws SQLException SQL error
+     */
     public List<WorkoutProgram> loadAllWorkoutPrograms(
             Connection connection, HashMap<Integer, Exercise> exerciseById) throws SQLException {
 
@@ -482,7 +507,7 @@ public class ProgramRepository {
         String workoutProgramSql = """
                 SELECT *
                 FROM WorkoutProgram
-                ORDER BY workout_id
+                ORDER BY program_name
                 """;
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(workoutProgramSql)) {
@@ -549,13 +574,13 @@ public class ProgramRepository {
         return workoutPrograms;
     }
 
-    /*
-     * SOON TO BE DEPRECATED.
+    /** @deprecated 1.0;
      * method for loading
      * all WorkoutPrograms
      * out of JSON.
      * Moving to JDBC.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public List<WorkoutProgram> loadAll() {
 
         Path resource = Paths.get("appdata", "programs.json");
@@ -591,13 +616,13 @@ public class ProgramRepository {
         return loadedPrograms;
     }
 
-    /*
-    Soon to be Deprecated.
+    /**
+    @deprecated 1.0;
     Method used to save all
     WorkoutProgram objects
-    to JSON.
-    Moving to JDBC.
+    to JSON. No longer in use.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void saveAll(List<WorkoutProgram> programList) {
 
         Path resource = Paths.get("appdata", "programs.json");

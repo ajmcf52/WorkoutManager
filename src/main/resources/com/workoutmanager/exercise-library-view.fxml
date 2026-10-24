@@ -45,11 +45,13 @@
         <Button text="Modify.."
                 styleClass="filter-control"
                 onAction="#modifyExercise"
-                textAlignment="CENTER" />
+                fx:id="modifyButton"
+                textAlignment="CENTER"/>
 
         <Button text="Delete exercise"
                 styleClass="filter-control"
                 onAction="#deleteExercise"
+                fx:id="deleteButton"
                 textAlignment="CENTER" />
 
     </VBox>

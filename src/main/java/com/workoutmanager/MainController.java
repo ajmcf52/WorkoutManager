@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
 import model.Exercise;
 import model.ExerciseRepository;
 import model.ProgramRepository;
@@ -104,7 +105,7 @@ public class MainController {
                     connection.commit();
 
                     allExercises.add(exercise);
-
+                    exerciseById.put(exerciseId, exercise);
 
                 } catch (SQLException e) {
                     connection.rollback();
@@ -134,6 +135,7 @@ public class MainController {
                     connection.commit();
 
                     allExercises.set(index, modified);
+                    exerciseById.put(modified.getExerciseId(), modified);
                 }
                 catch (SQLException e) {
                     connection.rollback();
@@ -175,12 +177,25 @@ public class MainController {
                     exerciseRepository.delete(exercise,connection);
             }
             catch (SQLException e) {
-                System.err.println("Exercise deletion failed in JDBC. Exiting.");
-                throw new RuntimeException(e);
+                /*
+                error code 19 == SQLITE_CONSTRAINT error,
+                which in the case of an Exercise deletion,
+                should only ever pop for FK_CONSTRAINT error.
+                 */
+                if (e.getErrorCode() == 19) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Delete Failed");
+                    alert.setHeaderText("Exercise used in a Workout program cannot be deleted.");
+                    alert.showAndWait();
+                }
+                else {
+                    System.err.println("Exercise deletion failed in JDBC. Exiting.");
+                    throw new RuntimeException(e);
+                }
             }
 
             allExercises.remove(exercise);
-
+            exerciseById.remove(exercise.getExerciseId());
         });
 
         // new workout program CB

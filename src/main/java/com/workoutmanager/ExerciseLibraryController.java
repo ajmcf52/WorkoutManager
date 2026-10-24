@@ -79,6 +79,12 @@ public class ExerciseLibraryController {
     @FXML
     private VBox instructionsContainer;
 
+    @FXML
+    private Button modifyButton;
+
+    @FXML
+    private Button deleteButton;
+
     private Consumer<Exercise> onExerciseCreated;
 
     private Consumer<Exercise> onExerciseDeleted;
@@ -204,6 +210,8 @@ public class ExerciseLibraryController {
             showDemoURL();
         }
 
+        enableAlterationButtons();
+
     }
 
     /*
@@ -224,7 +232,9 @@ public class ExerciseLibraryController {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             onExerciseDeleted.accept(selected);
+            updatePredicate();
         }
+
     }
 
     @FXML
@@ -283,11 +293,15 @@ public class ExerciseLibraryController {
             //make the callback to MainController
             onExerciseCreated.accept(exercise);
         }
+
+        updatePredicate();
     }
 
     //hides details when nothing is selected.
     private void hideExerciseDetails() {
+
         detailsPane.setVisible(false);
+        disableAlterationButtons();
     }
 
     /*
@@ -305,6 +319,16 @@ public class ExerciseLibraryController {
         List<Exercise> exercisesToShow = onFilterChanged.apply(exerciseFilter);
 
         displayedExercises.setAll(exercisesToShow);
+    }
+
+    private void enableAlterationButtons() {
+        modifyButton.setDisable(false);
+        deleteButton.setDisable(false);
+    }
+
+    private void disableAlterationButtons() {
+        modifyButton.setDisable(true);
+        deleteButton.setDisable(true);
     }
 
     private void hideMuscleGroups() {
@@ -334,6 +358,8 @@ public class ExerciseLibraryController {
 
     @FXML
     public void initialize() {
+
+        disableAlterationButtons();
 
         // table cell formatting
         nameColumn.setCellValueFactory(

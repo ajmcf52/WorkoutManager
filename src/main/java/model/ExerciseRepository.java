@@ -265,6 +265,9 @@ public class ExerciseRepository {
             sql += "\nAND " + queryConditions.get(i);
         }
 
+        // order alphabetically
+        sql += "\nORDER BY e.name";
+
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
 
@@ -495,9 +498,12 @@ public class ExerciseRepository {
         }
     }
 
-    /*
-    mapping exercise list from JSON to JDBC.
+    /**
+     * @deprecated since 1.0; used to move exercises
+     * from JSON persistence to JDBC.
+     * @throws SQLException SQL error
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void migrateExercisesFromJson() throws SQLException {
         List<Exercise> exerciseList = loadAll();
 
@@ -527,9 +533,14 @@ public class ExerciseRepository {
         }
     }
 
-    /*
-    migrates old difficulty values to new ones.
+    /**
+     *
+     * @deprecated 1.0; used to re-map difficulty
+     * values in JSON from "stars" to a text
+     * descriptor system.
+     * @param file JSON file we're migrating from
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void migrateDifficultyValues(File file) {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = null;
@@ -651,8 +662,8 @@ public class ExerciseRepository {
 
         String sql = """
                 SELECT *
-                FROM Exercise
-                ORDER BY exercise_id
+                FROM Exercise e
+                ORDER BY e.name
                 """;
         try (Statement statement = connection.createStatement()) {
             ResultSet results = statement.executeQuery(sql);
@@ -703,9 +714,11 @@ public class ExerciseRepository {
         return exerciseList;
     }
 
-    /*
-    loads the repository of exercises from the JSON file.
+    /**
+     * @deprecated 1.0; loads the repository of exercises from the JSON file.
+     * @return List of Exercises in persistence.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public List<Exercise> loadAll() {
 
         try {
@@ -744,13 +757,12 @@ public class ExerciseRepository {
         return exerciseList;
     }
 
-    /*
-    DEPRECATED.
-
-    writes the list of exercises to the JSON file.
-    to append a newly created exercise, this is the
-    cleanest way to avoid clumsy and brittle code.
+    /**
+     * @deprecated 1.0; writes the list of exercises to the JSON file.
+     *     to append a newly created exercise.
+     * @param exerciseList list of Exercises to be saved.
      */
+    @Deprecated(since = "1.0", forRemoval = false)
     public void saveAll(List<Exercise> exerciseList) {
         ObjectMapper mapper = new ObjectMapper();
 
