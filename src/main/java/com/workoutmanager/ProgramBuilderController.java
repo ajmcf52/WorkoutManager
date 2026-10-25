@@ -275,6 +275,10 @@ public class ProgramBuilderController {
 
         ProgramExercise programExercise = controller.getProgramExercise();
 
+        if (programExercise == null) {
+            return;
+        }
+
         addExerciseToSection(sectionType, programExercise);
     }
 
